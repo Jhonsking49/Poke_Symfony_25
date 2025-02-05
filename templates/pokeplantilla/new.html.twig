@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Pokeplantilla{% endblock %}
+
+{% block body %}
+    <h1>Create new Pokeplantilla</h1>
+
+    {{ include('pokeplantilla/_form.html.twig') }}
+
+    <a href="{{ path('app_pokeplantilla_index') }}">back to list</a>
+{% endblock %}

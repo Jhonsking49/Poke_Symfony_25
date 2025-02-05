@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Fights{% endblock %}
+
+{% block body %}
+    <h1>Create new Fights</h1>
+
+    {{ include('fights/_form.html.twig') }}
+
+    <a href="{{ path('app_fights_index') }}">back to list</a>
+{% endblock %}
