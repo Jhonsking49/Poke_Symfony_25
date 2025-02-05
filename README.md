@@ -8,15 +8,36 @@
  - Username
  - password
  - id
+ - pokemons relacion
 
-### Pokemon
+### PokemonPlantilla
 
  - id
- - Nombre
- - Nivel
+ - name
+ - tipo relacion
 
-### POkedex
+### Pokemos
+
+ - id
+ - plantilla relacion
+ - nivel
+ - fuerza
+ - user_id
+
+### Tipo
+
+ - id
+ - nombreTipo
+
+
+
+### HistorialGame
 
  - id
  - id_user
- - id_pokemon
+ - pokenemy
+ - result
+
+
+## Comandos
+
