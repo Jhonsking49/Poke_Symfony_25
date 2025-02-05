@@ -44,6 +44,7 @@
         <h1>Poke Symfony 25</h1>
         <div class="buttons-container">
             {% if app.user %}
+                <h4>{{ app.user.username }}</h4>
                 <a href="{{ path('app_logout') }}" class="btn btn-primary">Logout</a>
             {% else %}
                 <a href="{{ path('app_login') }}" class="btn btn-primary">Login</a>

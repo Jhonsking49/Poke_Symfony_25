@@ -83,7 +83,34 @@
         border-radius: 5px;
         color: #2e7d32;
     }
+
+    .home-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+
+    .btn-home {
+        background-color: #2196F3;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        border: 2px solid #1976D2;
+    }
+
+    .btn-home:hover {
+        background-color: #1976D2;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
 </style>
+
+<div class="home-button">
+    <a href="{{ path('app_main') }}" class="btn-home">Inicio</a>
+</div>
 
 <div class="login-container">
     <form method="post">
