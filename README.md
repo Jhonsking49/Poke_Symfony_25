@@ -1,22 +1,28 @@
-# Poke_Symfony_25
-
-
-## Tablas 
-
 ### Usuarios
 
  - Username
  - password
  - id
 
-### Pokemon
+### PokemonPlantilla
 
  - id
- - Nombre
- - Nivel
+ - name
+ - tipo
 
-### POkedex
+
+### Pokemos
 
  - id
- - id_user
- - id_pokemon
+ - PokemonPlantilla relacion
+ - nivel
+ - fuerza
+ - user_id
+
+
+### HistorialGame
+
+ - id
+ - pokeUser
+ - pokenemy
+ - idPokemonGanador
