@@ -71,4 +71,35 @@
     </div>
 </div>
 
+<h1>Mis Pokemons</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Nivel</th>
+            <th>Fuerza</th>
+            <th>Imagen</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for pokemon in pokemons %}
+        <tr>
+            <td>{{ pokemon.pokeplantilla.name }}</td>
+            <td>{{ pokemon.level }}</td>
+            <td>{{ pokemon.strength }}</td>
+            <td>{{ pokemon.img }}</td>
+            <td>
+                <a href="{{ path('app_entrenar', {'id': pokemon.id}) }}">Entrenar</a>
+                <a href="{{ path('app_pokemons_edit', {'id': pokemon.id}) }}">Combatir</a>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="4">no records found</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
 {% endblock %}
