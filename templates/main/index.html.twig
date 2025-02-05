@@ -55,7 +55,6 @@
     }
 </style>
 
-
 <div class="example-wrapper">
     <div class="header-container">
         <h1>Poke Symfony 25</h1>
@@ -69,6 +68,13 @@
             {% endif %}
         </div>
     </div>
+
+    {% if app.user %}
+        <div class="buttons-container">
+            <a href="{{ path('pokemons_capture') }}" class="btn btn-primary">Capturar Pokémon</a>
+            <a href="{{ path('pokemons_pokeuser') }}" class="btn btn-primary">Ver Pokédex</a>
+        </div>
+    {% endif %}
 </div>
 
 {% endblock %}
