@@ -18,14 +18,14 @@ class PokemonsType extends AbstractType
             ->add('level')
             ->add('strength')
             ->add('img')
-            ->add('pokeplantilla', EntityType::class, [
-                'class' => Pokeplantilla::class,
-                'choice_label' => 'id',
-            ])
-            ->add('user', EntityType::class, [
-                'class' => User::class,
-                'choice_label' => 'id',
-            ])
+            // ->add('pokeplantilla', EntityType::class, [
+            //     'class' => Pokeplantilla::class,
+            //     'choice_label' => 'id',
+            // ])
+            // ->add('user', EntityType::class, [
+            //     'class' => User::class,
+            //     'choice_label' => 'id',
+            // ])
         ;
     }
 

@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Pokemons;
+use App\Entity\Pokeplantilla;
 use App\Form\PokemonsType;
 use App\Repository\PokemonsRepository;
+use App\Repository\PokeplantillaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,6 +42,39 @@ final class PokemonsController extends AbstractController
             'pokemon' => $pokemon,
             'form' => $form,
         ]);
+    }
+    #[Route('/init', name: 'app_pokemons_init', methods: ['GET'])]
+    public function init(PokemonsRepository $pokemonsRepository, EntityManagerInterface $entityManager, PokeplantillaRepository $pokeplantillaRepository): Response
+    {
+        for ($i = 1; $i < 50; $i++) { 
+            // Fetch Pokemon data from PokeAPI
+            $pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon/{$i}";
+            $pokemonData = json_decode(file_get_contents($pokemonApiUrl), true);
+    
+            $pokemon = new Pokemons();
+            $pokePlantilla = new Pokeplantilla();
+    
+            // Set Pokemon name from API response
+            $pokePlantilla->setName($pokemonData['name']);
+    
+            // Set type (first type)
+            $pokePlantilla->setType($pokemonData['types'][0]['type']['name']);
+    
+            $pokemon->setLevel(1);
+            $pokemon->setStrength(10);
+            $pokemon->setImg("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/{$i}.svg");
+            $pokemon->setUser(null);
+            
+            // Set the Pokeplantilla for this Pokemon
+            $pokemon->setPokeplantilla($pokePlantilla);
+            $entityManager->persist($pokePlantilla);
+            $entityManager->persist($pokemon);
+        }
+        $entityManager->flush();
+        return $this->render('pokemons/index.html.twig', [
+            'pokemons' => $pokemonsRepository->findAll(),
+        ]);
+    
     }
 
     #[Route('/{id}', name: 'app_pokemons_show', methods: ['GET'])]
@@ -78,4 +113,9 @@ final class PokemonsController extends AbstractController
 
         return $this->redirectToRoute('app_pokemons_index', [], Response::HTTP_SEE_OTHER);
     }
+
+
+
+
+    
 }
