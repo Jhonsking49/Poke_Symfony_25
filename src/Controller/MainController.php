@@ -14,11 +14,11 @@ final class MainController extends AbstractController
     #[Route('/', name: 'app_main')]
     public function index(PokemonsRepository $pokemonsRepository): Response
     {
-        $pokemons = $pokemonsRepository->findAllByUserIdNull();
-        return $this->render('main/index.html.twig', [
+        $user = $this->getUser();
+        $pokemons = $user ? $pokemonsRepository->findBy(['user' => $user]) : [];
 
-            'controller_name' => 'MainController',
-            'pokemons' => $pokemons
+        return $this->render('main/index.html.twig', [
+            'pokemons' => $pokemons,
         ]);
     }
 
