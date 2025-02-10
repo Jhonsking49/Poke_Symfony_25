@@ -47,25 +47,20 @@ final class PokemonsController extends AbstractController
     public function init(PokemonsRepository $pokemonsRepository, EntityManagerInterface $entityManager, PokeplantillaRepository $pokeplantillaRepository): Response
     {
         for ($i = 1; $i < 50; $i++) { 
-            // Fetch Pokemon data from PokeAPI
             $pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon/{$i}";
             $pokemonData = json_decode(file_get_contents($pokemonApiUrl), true);
-    
+
             $pokemon = new Pokemons();
             $pokePlantilla = new Pokeplantilla();
-    
-            // Set Pokemon name from API response
+
             $pokePlantilla->setName($pokemonData['name']);
-    
-            // Set type (first type)
             $pokePlantilla->setType($pokemonData['types'][0]['type']['name']);
-    
+            $pokePlantilla->setImg("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/{$i}.svg");
+
             $pokemon->setLevel(1);
             $pokemon->setStrength(10);
-            $pokemon->setImg("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/{$i}.svg");
             $pokemon->setUser(null);
             
-            // Set the Pokeplantilla for this Pokemon
             $pokemon->setPokeplantilla($pokePlantilla);
             $entityManager->persist($pokePlantilla);
             $entityManager->persist($pokemon);
@@ -74,7 +69,6 @@ final class PokemonsController extends AbstractController
         return $this->render('pokemons/index.html.twig', [
             'pokemons' => $pokemonsRepository->findAll(),
         ]);
-    
     }
 
     #[Route('/pokemon/train/{id}', name: 'app_pokemon_train', methods: ['GET'])]

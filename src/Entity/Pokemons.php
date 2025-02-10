@@ -39,9 +39,6 @@ class Pokemons
     #[ORM\OneToMany(targetEntity: Fights::class, mappedBy: 'pokenemy')]
     private Collection $fightspokenemy;
 
-    #[ORM\Column(length: 255)]
-    private ?string $img = null;
-
     #[ORM\Column]
     private ?int $State = null;
 
@@ -160,18 +157,6 @@ class Pokemons
                 $fightspokenemy->setPokenemy(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getImg(): ?string
-    {
-        return $this->img;
-    }
-
-    public function setImg(string $img): static
-    {
-        $this->img = $img;
 
         return $this;
     }
