@@ -89,6 +89,38 @@ final class PokemonsController extends AbstractController
         return $this->redirectToRoute('app_main');
     }
 
+    #[Route('/available-pokemon', name: 'app_pokemons_available', methods: ['GET'])]
+    public function availablePokemon(EntityManagerInterface $entityManager): Response
+    {
+        // Obtener el total de Pokémon sin dueño
+        $totalPokemons = $entityManager->createQueryBuilder()
+            ->select('COUNT(p.id)')
+            ->from(Pokemons::class, 'p')
+            ->where('p.user IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        if ($totalPokemons == 0) {
+            $this->addFlash('error', 'No hay pokémons disponibles para capturar.');
+            return $this->redirectToRoute('app_main');
+        }
+
+        // Obtener un Pokémon aleatorio
+        $randomOffset = random_int(0, $totalPokemons - 1);
+        $randomPokemon = $entityManager->createQueryBuilder()
+            ->select('p')
+            ->from(Pokemons::class, 'p')
+            ->where('p.user IS NULL')
+            ->setMaxResults(1)
+            ->setFirstResult($randomOffset)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $this->render('pokemons/available.html.twig', [
+            'pokemon' => $randomPokemon,
+        ]);
+    }
+
     #[Route('/mis-pokemons', name: 'app_pokemons_mis_pokemons', methods: ['GET'])]
     public function misPokemons(PokemonsRepository $pokemonsRepository): Response
     {
@@ -97,23 +129,32 @@ final class PokemonsController extends AbstractController
         ]);
     }
 
-
-    #[Route('/pokemon/capture/{id}', name: 'app_pokemon_capture')]
-        public function capture(Pokemons $pokemon, PokemonsRepository $pokemonsRepository): Response
-        {
-            if (!$this->getUser()) {
-                throw $this->createAccessDeniedException('Debes estar logueado para capturar pokémons.');
-            }
-
-            $resultado = $pokemonsRepository->intentarCapturarPokemon($pokemon, $this->getUser()->getId());
-            
-            $this->addFlash(
-                $resultado['exito'] ? 'success' : 'error',
-                $resultado['mensaje']
-            );
-
-            return $this->redirectToRoute('app_main');
+    #[Route('/pokemon/capture/{id}', name: 'app_pokemon_capture', methods: ['GET'])]
+    public function capture(int $id, EntityManagerInterface $entityManager, PokemonsRepository $pokemonsRepository): Response
+    {
+        if (!$this->getUser()) {
+            throw $this->createAccessDeniedException('Debes estar logueado para capturar pokémons.');
         }
+
+        $pokemon = $pokemonsRepository->find($id);
+        
+        if (!$pokemon) {
+            throw $this->createNotFoundException('No se encontró el Pokémon.');
+        }
+
+        if ($pokemon->getUser() !== null) {
+            throw $this->createAccessDeniedException('Este Pokémon ya tiene dueño.');
+        }
+
+        $resultado = $pokemonsRepository->intentarCapturarPokemon($pokemon, $this->getUser()->getId());
+        
+        $this->addFlash(
+            $resultado['exito'] ? 'success' : 'error',
+            $resultado['mensaje']
+        );
+
+        return $this->redirectToRoute('app_pokemons_available');
+    }
 
     #[Route('/{id}', name: 'app_pokemons_show', methods: ['GET'])]
     public function show(Pokemons $pokemon): Response
@@ -151,9 +192,4 @@ final class PokemonsController extends AbstractController
 
         return $this->redirectToRoute('app_pokemons_index', [], Response::HTTP_SEE_OTHER);
     }
-
-
-
-
-    
 }
