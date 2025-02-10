@@ -15,6 +15,27 @@ use App\Entity\Pokemons;
 #[Route('/fights')]
 final class FightsController extends AbstractController
 {
+    #[Route('/my-fights', name: 'app_fights_user_history', methods: ['GET'])]
+    public function userFights(FightsRepository $fightsRepository): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('Debes estar logueado para ver tu historial.');
+        }
+
+        $fights = $fightsRepository->createQueryBuilder('f')
+            ->join('f.pokeuser', 'p')
+            ->where('p.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('f.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('fights/user_history.html.twig', [
+            'fights' => $fights,
+        ]);
+    }
+
     #[Route(name: 'app_fights_index', methods: ['GET'])]
     public function index(FightsRepository $fightsRepository): Response
     {
@@ -152,26 +173,5 @@ final class FightsController extends AbstractController
         }
 
         return $this->redirectToRoute('app_fights_index', [], Response::HTTP_SEE_OTHER);
-    }
-
-    #[Route('/my-fights', name: 'app_fights_user_history', methods: ['GET'])]
-    public function userFights(FightsRepository $fightsRepository): Response
-    {
-        $user = $this->getUser();
-        if (!$user) {
-            throw $this->createAccessDeniedException('Debes estar logueado para ver tu historial.');
-        }
-
-        $fights = $fightsRepository->createQueryBuilder('f')
-            ->join('f.pokeuser', 'p')
-            ->where('p.user = :user')
-            ->setParameter('user', $user)
-            ->orderBy('f.id', 'DESC')
-            ->getQuery()
-            ->getResult();
-
-        return $this->render('fights/user_history.html.twig', [
-            'fights' => $fights,
-        ]);
     }
 }
