@@ -22,6 +22,7 @@ final class FightsController extends AbstractController
             'fights' => $fightsRepository->findAll(),
         ]);
     }
+
     #[Route('/new', name: 'app_fights_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
