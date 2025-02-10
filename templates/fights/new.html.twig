@@ -79,6 +79,21 @@
             background-color: #0056b3;
         }
 
+        #selected-pokemon-img {
+            width: 150px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+            display: block;
+            margin: 10px auto;
+        }
+
+        .pokemon-preview {
+            text-align: center;
+            margin-top: 15px;
+        }
+
     </style>
 {% endblock %}
 
@@ -90,13 +105,17 @@
         <div class="user-pokemons">
             <h2>Your Pokémons</h2>
             <form method="post">
-                <select name="pokeuser_id" required>
+                <select name="pokeuser_id" required id="pokemon-select" onchange="updatePokemonImage(this)">
+                    <option value="">Selecciona un Pokémon</option>
                     {% for pokemon in user_pokemons %}
-                        <option value="{{ pokemon.id }}">
+                        <option value="{{ pokemon.id }}" data-image="{{ pokemon.img }}">
                             {{ pokemon.pokeplantilla.name }} (Level: {{ pokemon.level }}, Strength: {{ pokemon.strength }})
                         </option>
                     {% endfor %}
                 </select>
+                <div class="pokemon-preview">
+                    <img id="selected-pokemon-img" src="" alt="Selected Pokemon" style="display: none;">
+                </div>
                 <input type="hidden" name="pokenemy_id" value="{{ random_pokemon.id }}">
                 <button type="submit" class="btn">Fight!</button>
             </form>
@@ -114,6 +133,20 @@
     
     <a href="{{ path('app_main') }}" class="back-link">Huir como un cobarde</a>
 
+    <script>
+        function updatePokemonImage(selectElement) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const imageUrl = selectedOption.getAttribute('data-image');
+            const imageElement = document.getElementById('selected-pokemon-img');
+            
+            if (imageUrl) {
+                imageElement.src = imageUrl;
+                imageElement.style.display = 'block';
+            } else {
+                imageElement.style.display = 'none';
+            }
+        }
+    </script>
 {% endblock %}
 
 
