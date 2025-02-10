@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mi Historial de Combates{% endblock %}
+
+{% block body %}
+<style>
+    .fights-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .fight-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pokemon-info {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .vs {
+        font-size: 24px;
+        font-weight: bold;
+        color: #666;
+    }
+
+    .result {
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .result-victory {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .result-defeat {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .result-draw {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .btn-back {
+        background-color: #6c757d;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="fights-container">
+    <div class="header-container">
+        <h1>Mi Historial de Combates</h1>
+        <a href="{{ path('app_main') }}" class="btn-back">Volver al inicio</a>
+    </div>
+
+    {% if fights is empty %}
+        <p>Aún no has participado en ningún combate.</p>
+    {% else %}
+        {% for fight in fights %}
+            <div class="fight-card">
+                <div class="pokemon-info">
+                    <div>
+                        <strong>{{ fight.pokeuser.pokeplantilla.name }}</strong>
+                        <br>
+                        Nivel: {{ fight.pokeuser.level }}
+                    </div>
+                    <span class="vs">VS</span>
+                    <div>
+                        <strong>{{ fight.pokenemy.pokeplantilla.name }}</strong>
+                        <br>
+                        Nivel: {{ fight.pokenemy.level }}
+                    </div>
+                </div>
+                <div class="result {% if fight.result == 1 %}result-victory{% elseif fight.result == 2 %}result-defeat{% else %}result-draw{% endif %}">
+                    {% if fight.result == 1 %}
+                        Victoria
+                    {% elseif fight.result == 2 %}
+                        Derrota
+                    {% else %}
+                        Empate
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

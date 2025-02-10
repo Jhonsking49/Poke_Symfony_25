@@ -1,35 +1,51 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Fights index{% endblock %}
+{% block title %}Historial de Combates{% endblock %}
 
 {% block body %}
-    <h1>Fights index</h1>
+    <h1>Historial de Combates</h1>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
 
     <table class="table">
         <thead>
             <tr>
                 <th>Id</th>
-                <th>Result</th>
-                <th>actions</th>
+                <th>Pokémon Usuario</th>
+                <th>Pokémon Enemigo</th>
+                <th>Resultado</th>
             </tr>
         </thead>
         <tbody>
         {% for fight in fights %}
             <tr>
                 <td>{{ fight.id }}</td>
-                <td>{{ fight.result }}</td>
+                <td>{{ fight.pokeuser.pokeplantilla.name }} (Nivel: {{ fight.pokeuser.level }})</td>
+                <td>{{ fight.pokenemy.pokeplantilla.name }} (Nivel: {{ fight.pokenemy.level }})</td>
                 <td>
-                    <a href="{{ path('app_fights_show', {'id': fight.id}) }}">show</a>
-                    <a href="{{ path('app_fights_edit', {'id': fight.id}) }}">edit</a>
+                    {% if fight.result == 1 %}
+                        Victoria
+                    {% elseif fight.result == 2 %}
+                        Derrota
+                    {% else %}
+                        Empate
+                    {% endif %}
                 </td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="3">no records found</td>
+                <td colspan="4">No hay registros de combates</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
 
-    <a href="{{ path('app_fights_new') }}">Create new</a>
+    <a href="{{ path('app_fights_new') }}" class="btn btn-primary">Nuevo Combate</a>
+    <a href="{{ path('app_main') }}" class="btn btn-secondary">Volver al inicio</a>
 {% endblock %}
