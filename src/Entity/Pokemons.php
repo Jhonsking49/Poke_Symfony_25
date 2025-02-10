@@ -42,6 +42,9 @@ class Pokemons
     #[ORM\Column(length: 255)]
     private ?string $img = null;
 
+    #[ORM\Column]
+    private ?int $State = null;
+
     public function __construct()
     {
         $this->fightspokeuser = new ArrayCollection();
@@ -169,6 +172,18 @@ class Pokemons
     public function setImg(string $img): static
     {
         $this->img = $img;
+
+        return $this;
+    }
+
+    public function getState(): ?int
+    {
+        return $this->State;
+    }
+
+    public function setState(int $State): static
+    {
+        $this->State = $State;
 
         return $this;
     }

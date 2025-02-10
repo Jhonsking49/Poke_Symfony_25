@@ -27,6 +27,15 @@ class Pokeplantilla
     #[ORM\OneToMany(targetEntity: Pokemons::class, mappedBy: 'pokeplantilla')]
     private Collection $pokemons;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $evolution = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $evolevel = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $img = null;
+
     public function __construct()
     {
         $this->pokemons = new ArrayCollection();
@@ -87,6 +96,42 @@ class Pokeplantilla
                 $pokemon->setPokeplantilla(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEvolution(): ?int
+    {
+        return $this->evolution;
+    }
+
+    public function setEvolution(?int $evolution): static
+    {
+        $this->evolution = $evolution;
+
+        return $this;
+    }
+
+    public function getEvolevel(): ?int
+    {
+        return $this->evolevel;
+    }
+
+    public function setEvolevel(?int $evolevel): static
+    {
+        $this->evolevel = $evolevel;
+
+        return $this;
+    }
+
+    public function getImg(): ?string
+    {
+        return $this->img;
+    }
+
+    public function setImg(string $img): static
+    {
+        $this->img = $img;
 
         return $this;
     }
