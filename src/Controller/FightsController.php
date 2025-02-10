@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\Pokemons;
 
 #[Route('/fights')]
 final class FightsController extends AbstractController
@@ -21,24 +22,62 @@ final class FightsController extends AbstractController
             'fights' => $fightsRepository->findAll(),
         ]);
     }
-
     #[Route('/new', name: 'app_fights_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $fight = new Fights();
-        $form = $this->createForm(FightsType::class, $fight);
-        $form->handleRequest($request);
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('You must be logged in to fight.');
+        }
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        // Obtener los Pokémon del usuario
+        $userPokemons = $entityManager->getRepository(Pokemons::class)->findBy(['user' => $user]);
+
+        // Obtener el total de Pokémon en la base de datos
+        $totalPokemons = $entityManager->createQueryBuilder()
+            ->select('COUNT(p.id)')
+            ->from(Pokemons::class, 'p')
+            ->where('p.user IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        if ($totalPokemons == 0) {
+            throw $this->createNotFoundException('No enemy Pokémon found.');
+        }
+
+        // Obtener un Pokémon aleatorio
+        $randomOffset = random_int(0, $totalPokemons - 1);
+        $randomPokemon = $entityManager->createQueryBuilder()
+            ->select('p')
+            ->from(Pokemons::class, 'p')
+            ->setMaxResults(1)
+            ->setFirstResult($randomOffset)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$randomPokemon) {
+            throw $this->createNotFoundException('No enemy Pokémon found.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $selectedPokemon = $entityManager->getRepository(Pokemons::class)->find($request->request->get('pokeuser_id'));
+
+            if (!$selectedPokemon || $selectedPokemon->getUser() !== $user) {
+                throw $this->createAccessDeniedException('Invalid Pokémon selection.');
+            }
+
+            $fight = new Fights();
+            $fight->setPokeuser($selectedPokemon);
+            $fight->setPokenemy($randomPokemon);
             $entityManager->persist($fight);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_fights_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_fights_index');
         }
 
         return $this->render('fights/new.html.twig', [
-            'fight' => $fight,
-            'form' => $form,
+            'user_pokemons' => $userPokemons,
+            'random_pokemon' => $randomPokemon,
         ]);
     }
 

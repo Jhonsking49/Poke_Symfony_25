@@ -1,11 +1,36 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Fights{% endblock %}
+{% block title %}New Fight{% endblock %}
 
 {% block body %}
-    <h1>Create new Fights</h1>
-
-    {{ include('fights/_form.html.twig') }}
-
-    <a href="{{ path('app_fights_index') }}">back to list</a>
+    <h1>Create New Fight</h1>
+    
+    <div class="fight-container" style="display: flex; justify-content: space-between;">
+        <!-- Selección de Pokémon del usuario -->
+        <div class="user-pokemons">
+            <h2>Your Pokémons</h2>
+            <form method="post">
+                <select name="pokeuser_id" required>
+                    {% for pokemon in user_pokemons %}
+                        <option value="{{ pokemon.id }}">
+                            {{ pokemon.pokeplantilla.name }} (Level: {{ pokemon.level }}, Strength: {{ pokemon.strength }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="pokenemy_id" value="{{ random_pokemon.id }}">
+                <button type="submit" class="btn">Fight!</button>
+            </form>
+        </div>
+        
+        <!-- Pokémon enemigo aleatorio -->
+        <div class="enemy-pokemon">
+            <h2>Enemy Pokémon</h2>
+            <p><strong>Name:</strong> {{ random_pokemon.pokeplantilla.name }}</p>
+            <p><strong>Level:</strong> {{ random_pokemon.level }}</p>
+            <p><strong>Strength:</strong> {{ random_pokemon.strength }}</p>
+            <img src="{{ random_pokemon.img }}" alt="{{ random_pokemon.pokeplantilla.name }}" style="width: 150px; height: auto;">
+        </div>
+    </div>
+    
+    <a href="{{ path('app_fights_index') }}">Back to list</a>
 {% endblock %}
