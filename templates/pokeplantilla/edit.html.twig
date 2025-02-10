@@ -1,13 +1,190 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Pokeplantilla{% endblock %}
+{% block title %}Editar Plantilla Pokémon{% endblock %}
 
 {% block body %}
-    <h1>Edit Pokeplantilla</h1>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
 
-    {{ include('pokeplantilla/_form.html.twig', {'button_label': 'Update'}) }}
+        .edit-plantilla-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
 
-    <a href="{{ path('app_pokeplantilla_index') }}">back to list</a>
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-family: 'Pokemon Solid', sans-serif;
+            letter-spacing: 2px;
+        }
 
-    {{ include('pokeplantilla/_delete_form.html.twig') }}
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .plantilla-form > div {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .plantilla-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plantilla-form input,
+        .plantilla-form select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .plantilla-form input:focus,
+        .plantilla-form select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+            background: white;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+        }
+
+        .btn-submit {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: white;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-back {
+            background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(127, 140, 141, 0.3);
+        }
+
+        .btn-delete {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        form[name="delete_form"] {
+            margin: 0;
+            padding: 0;
+            display: inline-block;
+        }
+
+        form[name="delete_form"] button {
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        form[name="delete_form"] button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .edit-plantilla-container {
+                margin: 20px auto;
+                padding: 20px;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn, 
+            form[name="delete_form"] button {
+                width: 100%;
+                text-align: center;
+                margin: 5px 0;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+
+    <div class="edit-plantilla-container">
+        <h1>Editar Plantilla Pokémon</h1>
+
+        <div class="form-container">
+            {{ form_start(form, {'attr': {'class': 'plantilla-form'}}) }}
+                {{ form_widget(form) }}
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">Guardar Cambios</button>
+                    <a href="{{ path('app_pokeplantilla_index') }}" class="btn btn-back">Volver al listado</a>
+                    {{ include('pokeplantilla/_delete_form.html.twig') }}
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
 {% endblock %}

@@ -1,34 +1,210 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Pokemons{% endblock %}
+{% block title %}Detalles del Pokémon{% endblock %}
 
 {% block body %}
-    <h1>Pokemons</h1>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1b998b 0%, #2d6a4f 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ pokemon.id }}</td>
-            </tr>
-            <tr>
-                <th>Level</th>
-                <td>{{ pokemon.level }}</td>
-            </tr>
-            <tr>
-                <th>Strength</th>
-                <td>{{ pokemon.strength }}</td>
-            </tr>
-            <tr>
-                <th>Img</th>
-                <td>{{ pokemon.img }}</td>
-            </tr>
-        </tbody>
-    </table>
+        .show-pokemon-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+        }
 
-    <a href="{{ path('app_pokemons_index') }}">back to list</a>
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-family: 'Pokemon Solid', sans-serif;
+            letter-spacing: 2px;
+        }
 
-    <a href="{{ path('app_pokemons_edit', {'id': pokemon.id}) }}">edit</a>
+        .pokemon-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
 
-    {{ include('pokemons/_delete_form.html.twig') }}
+        .pokemon-image-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .pokemon-image {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 3px solid rgba(255,255,255,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .pokemon-image:hover {
+            transform: scale(1.05);
+        }
+
+        .info-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .info-group:hover {
+            transform: translateX(10px);
+        }
+
+        .label {
+            font-weight: bold;
+            color: #2c3e50;
+            width: 120px;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .value {
+            color: #34495e;
+            font-size: 1.1em;
+            flex-grow: 1;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+        }
+
+        .btn-back {
+            background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+            box-shadow: 0 4px 15px rgba(127, 140, 141, 0.3);
+        }
+
+        .btn-edit {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3);
+        }
+
+        .btn-delete {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        form[name="delete_form"] {
+            margin: 0;
+            padding: 0;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .show-pokemon-container {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .pokemon-card {
+                padding: 20px;
+            }
+
+            .pokemon-image {
+                width: 150px;
+                height: 150px;
+            }
+
+            .info-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <div class="show-pokemon-container">
+        <h1>Detalles del Pokémon</h1>
+
+        <div class="pokemon-card">
+            <div class="pokemon-image-container">
+                <img src="{{ pokemon.img }}" alt="Imagen del Pokémon" class="pokemon-image">
+            </div>
+
+            <div class="pokemon-info">
+                <div class="info-group">
+                    <span class="label">ID</span>
+                    <span class="value">{{ pokemon.id }}</span>
+                </div>
+                
+                <div class="info-group">
+                    <span class="label">Nivel</span>
+                    <span class="value">{{ pokemon.level }}</span>
+                </div>
+                
+                <div class="info-group">
+                    <span class="label">Fuerza</span>
+                    <span class="value">{{ pokemon.strength }}</span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="{{ path('app_pokemons_index') }}" class="btn btn-back">Volver al listado</a>
+                <a href="{{ path('app_pokemons_edit', {'id': pokemon.id}) }}" class="btn btn-edit">Editar</a>
+                <form method="post" action="{{ path('app_pokemons_delete', {'id': pokemon.id}) }}" onsubmit="return confirm('¿Estás seguro que deseas eliminar este Pokémon?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ pokemon.id) }}">
+                    <button class="btn btn-delete">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock %}

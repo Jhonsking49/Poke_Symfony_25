@@ -1,11 +1,153 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Pokeplantilla{% endblock %}
+{% block title %}Nueva Plantilla Pokémon{% endblock %}
 
 {% block body %}
-    <h1>Create new Pokeplantilla</h1>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
 
-    {{ include('pokeplantilla/_form.html.twig') }}
+        .create-plantilla-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
 
-    <a href="{{ path('app_pokeplantilla_index') }}">back to list</a>
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-family: 'Pokemon Solid', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .plantilla-form > div {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .plantilla-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plantilla-form input,
+        .plantilla-form select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .plantilla-form input:focus,
+        .plantilla-form select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+            background: white;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+        }
+
+        .btn-submit {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: white;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-back {
+            background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(127, 140, 141, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .create-plantilla-container {
+                margin: 20px auto;
+                padding: 20px;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+
+    <div class="create-plantilla-container">
+        <h1>Crear Nueva Plantilla</h1>
+
+        <div class="form-container">
+            {{ form_start(form, {'attr': {'class': 'plantilla-form'}}) }}
+                {{ form_widget(form) }}
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">Crear Plantilla</button>
+                    <a href="{{ path('app_pokeplantilla_index') }}" class="btn btn-back">Volver al listado</a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
 {% endblock %}

@@ -1,39 +1,209 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Pokemons index{% endblock %}
+{% block title %}Listado de Pokémon{% endblock %}
 
 {% block body %}
-    <h1>Pokemons index</h1>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1b998b 0%, #2d6a4f 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Level</th>
-                <th>Strength</th>
-                <th>Img</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for pokemon in pokemons %}
-            <tr>
-                <td>{{ pokemon.id }}</td>
-                <td>{{ pokemon.level }}</td>
-                <td>{{ pokemon.strength }}</td>
-                <td>{{ pokemon.img }}</td>
-                <td>
-                    <a href="{{ path('app_pokemons_show', {'id': pokemon.id}) }}">show</a>
-                    <a href="{{ path('app_pokemons_edit', {'id': pokemon.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+        .pokemon-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
 
-    <a href="{{ path('app_pokemons_new') }}">Create new</a>
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-family: 'Pokemon Solid', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .table th {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #2c3e50;
+            vertical-align: middle;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+            transition: background-color 0.3s ease;
+        }
+
+        .pokemon-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .pokemon-image:hover {
+            transform: scale(1.1);
+        }
+
+        .action-links a {
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-show {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-edit {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3);
+        }
+
+        .create-new-container {
+            text-align: center;
+            margin: 30px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-pokemon {
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-create {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-home {
+            background: linear-gradient(145deg, #9b59b6, #8e44ad);
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+
+        .btn-pokemon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .pokemon-container {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .action-links a {
+                display: block;
+                margin: 5px 0;
+                text-align: center;
+            }
+
+            .create-new-container {
+                flex-direction: column;
+                padding: 0 20px;
+            }
+
+            .btn-pokemon {
+                width: 100%;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+
+    <div class="pokemon-container">
+        <h1>Listado de Pokémon</h1>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Imagen</th>
+                    <th>Nivel</th>
+                    <th>Fuerza</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for pokemon in pokemons %}
+                <tr>
+                    <td>{{ pokemon.id }}</td>
+                    <td><img src="{{ pokemon.img }}" alt="Pokemon" class="pokemon-image"></td>
+                    <td>{{ pokemon.level }}</td>
+                    <td>{{ pokemon.strength }}</td>
+                    <td class="action-links">
+                        <a href="{{ path('app_pokemons_show', {'id': pokemon.id}) }}" class="btn-show">Ver</a>
+                        <a href="{{ path('app_pokemons_edit', {'id': pokemon.id}) }}" class="btn-edit">Editar</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">No se encontraron registros</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="create-new-container">
+            <a href="{{ path('app_pokemons_new') }}" class="btn-pokemon btn-create">Crear nuevo Pokémon</a>
+            <a href="{{ path('app_main') }}" class="btn-pokemon btn-home">Volver al Inicio</a>
+        </div>
+    </div>
 {% endblock %}

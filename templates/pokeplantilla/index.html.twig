@@ -1,37 +1,203 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Pokeplantilla index{% endblock %}
+{% block title %}Listado de Plantillas Pokémon{% endblock %}
 
 {% block body %}
-    <h1>Pokeplantilla index</h1>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for pokeplantilla in pokeplantillas %}
-            <tr>
-                <td>{{ pokeplantilla.id }}</td>
-                <td>{{ pokeplantilla.name }}</td>
-                <td>{{ pokeplantilla.type }}</td>
-                <td>
-                    <a href="{{ path('app_pokeplantilla_show', {'id': pokeplantilla.id}) }}">show</a>
-                    <a href="{{ path('app_pokeplantilla_edit', {'id': pokeplantilla.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="4">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+        .plantilla-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
 
-    <a href="{{ path('app_pokeplantilla_new') }}">Create new</a>
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-family: 'Pokemon Solid', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .table th {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #2c3e50;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+            transition: background-color 0.3s ease;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-links a {
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-show {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-edit {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3);
+        }
+
+        .action-links a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .create-new-container {
+            text-align: center;
+            margin: 30px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-plantilla {
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-create {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-home {
+            background: linear-gradient(145deg, #9b59b6, #8e44ad);
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+
+        .btn-plantilla:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .plantilla-container {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .action-links a {
+                display: block;
+                margin: 5px 0;
+                text-align: center;
+            }
+
+            .create-new-container {
+                flex-direction: column;
+                padding: 0 20px;
+            }
+
+            .btn-plantilla {
+                width: 100%;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+
+    <div class="plantilla-container">
+        <h1>Listado de Plantillas Pokémon</h1>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for pokeplantilla in pokeplantillas %}
+                <tr>
+                    <td>{{ pokeplantilla.id }}</td>
+                    <td>{{ pokeplantilla.name }}</td>
+                    <td>{{ pokeplantilla.type }}</td>
+                    <td class="action-links">
+                        <a href="{{ path('app_pokeplantilla_show', {'id': pokeplantilla.id}) }}" class="btn-show">Ver</a>
+                        <a href="{{ path('app_pokeplantilla_edit', {'id': pokeplantilla.id}) }}" class="btn-edit">Editar</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">No se encontraron registros</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="create-new-container">
+            <a href="{{ path('app_pokeplantilla_new') }}" class="btn-plantilla btn-create">Crear nueva plantilla</a>
+            <a href="{{ path('app_main') }}" class="btn-plantilla btn-home">Volver al Inicio</a>
+        </div>
+    </div>
 {% endblock %}
