@@ -155,14 +155,9 @@
                         <span class="stat">Nivel: {{ pokemon.level }}</span>
                         <span class="stat">Fuerza: {{ pokemon.strength }}</span>
                     </div>
-                    {% if app.user %}
-                        <div class="card-buttons">
-                            {% if pokemon.user is null %}
-                                <a href="{{ path('app_pokemon_capture', {'id': pokemon.id}) }}" class="btn btn-capture">Capturar</a>
-                            {% endif %}
-                            
-                        </div>
-                    {% endif %}
+                    <div class="card-buttons">
+                        <a href="{{ path('app_pokemon_train', {'id': pokemon.id}) }}" class="btn btn-train">Entrenar</a>
+                    </div>
                 </div>
             </div>
         {% else %}

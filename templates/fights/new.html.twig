@@ -2,10 +2,90 @@
 
 {% block title %}New Fight{% endblock %}
 
+{% block stylesheets %}
+    <style>
+        .title {
+            font-size: 2em;
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .fight-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-pokemons, .enemy-pokemon {
+            width: 48%;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-pokemons h2, .enemy-pokemon h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+
+        .btn:hover {
+            background-color: #218838;
+        }
+
+        .pokemon-img {
+            width: 150px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1.1em;
+        }
+
+        .back-link:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+{% endblock %}
+
 {% block body %}
-    <h1>Create New Fight</h1>
-    
-    <div class="fight-container" style="display: flex; justify-content: space-between;">
+    <h1 class="title">LUCHAD!</h1>
+
+    <div class="fight-container">
         <!-- Selección de Pokémon del usuario -->
         <div class="user-pokemons">
             <h2>Your Pokémons</h2>
@@ -28,9 +108,12 @@
             <p><strong>Name:</strong> {{ random_pokemon.pokeplantilla.name }}</p>
             <p><strong>Level:</strong> {{ random_pokemon.level }}</p>
             <p><strong>Strength:</strong> {{ random_pokemon.strength }}</p>
-            <img src="{{ random_pokemon.img }}" alt="{{ random_pokemon.pokeplantilla.name }}" style="width: 150px; height: auto;">
+            <img src="{{ random_pokemon.img }}" alt="{{ random_pokemon.pokeplantilla.name }}" class="pokemon-img">
         </div>
     </div>
     
-    <a href="{{ path('app_main') }}">Back to list</a>
+    <a href="{{ path('app_main') }}" class="back-link">Huir como un cobarde</a>
+
 {% endblock %}
+
+
