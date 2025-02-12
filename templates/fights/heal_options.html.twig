@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Curar Pokémon{% endblock %}
+
+{% block body %}
+    <h1>Elige el Pokémon que quieres curar</h1>
+
+    <div class="pokemon-grid">
+        {% for pokemon in injured_pokemons %}
+            <div class="pokemon-card">
+                <img src="{{ pokemon.pokeplantilla.img }}" alt="{{ pokemon.pokeplantilla.name }}" class="pokemon-image">
+                <div class="pokemon-info">
+                    <h3>{{ pokemon.pokeplantilla.name }}</h3>
+                    <div class="pokemon-stats">
+                        <span class="stat">Nivel: {{ pokemon.level }}</span>
+                        <span class="stat">Fuerza: {{ pokemon.strength }}</span>
+                    </div>
+                    <a href="{{ path('app_fights_heal_pokemon', {'fight_id': fight_id, 'pokemon_id': pokemon.id}) }}" 
+                       class="btn btn-heal">Curar este Pokémon</a>
+                </div>
+            </div>
+        {% else %}
+            <p>No tienes Pokémon malheridos para curar.</p>
+        {% endfor %}
+    </div>
+
+    <a href="{{ path('app_fights_index') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}

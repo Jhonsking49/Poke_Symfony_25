@@ -40,7 +40,7 @@ class Pokemons
     private Collection $fightspokenemy;
 
     #[ORM\Column]
-    private ?int $State = null;
+    private ?int $state = null;
 
     public function __construct()
     {
@@ -163,12 +163,12 @@ class Pokemons
 
     public function getState(): ?int
     {
-        return $this->State;
+        return $this->state;
     }
 
-    public function setState(int $State): static
+    public function setState(int $state): static
     {
-        $this->State = $State;
+        $this->state = $state;
 
         return $this;
     }
