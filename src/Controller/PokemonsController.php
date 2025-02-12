@@ -86,13 +86,11 @@ final class PokemonsController extends AbstractController
             $pokemon = new Pokemons();
             $pokemon->setLevel(1);
             $pokemon->setStrength(10);
-            $pokemon->setImg("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/{$randomPokemonId}.svg");
             $pokemon->setPokeplantilla($pokePlantilla);
 
             // Guardar datos en la sesión
             $request->getSession()->set('temp_pokemon', [
                 'plantilla_id' => $pokePlantilla->getId(),
-                'img' => $pokemon->getImg(),
                 'level' => $pokemon->getLevel(),
                 'strength' => $pokemon->getStrength()
             ]);
@@ -147,7 +145,6 @@ final class PokemonsController extends AbstractController
                 $pokemon = new Pokemons();
                 $pokemon->setLevel($tempPokemon['level']);
                 $pokemon->setStrength($tempPokemon['strength']);
-                $pokemon->setImg($tempPokemon['img']);
                 $pokemon->setUser($this->getUser());
                 $pokemon->setPokeplantilla($pokePlantilla);
                 
