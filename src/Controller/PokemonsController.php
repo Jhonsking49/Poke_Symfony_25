@@ -61,7 +61,6 @@ final class PokemonsController extends AbstractController
     public function availablePokemon(
         Request $request,
         EntityManagerInterface $entityManager, 
-        PokemonsRepository $pokemonsRepository,
         PokeplantillaRepository $pokeplantillaRepository
     ): Response
     {
