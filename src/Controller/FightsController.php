@@ -53,7 +53,7 @@ final class FightsController extends AbstractController
             throw $this->createAccessDeniedException('Debes estar logueado para luchar.');
         }
 
-        // Obtener los Pokémons del usuario
+        // Obteners los Pokémons del usuario
         $userPokemons = $entityManager->getRepository(Pokemons::class)->findBy(['user' => $user]);
         
         if (empty($userPokemons)) {
