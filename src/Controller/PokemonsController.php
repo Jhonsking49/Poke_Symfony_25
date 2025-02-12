@@ -237,30 +237,29 @@ final class PokemonsController extends AbstractController
             throw $this->createNotFoundException('Pokémon no encontrado.');
         }
 
-        if ($pokemon->getLevel() < 10) {
-            $this->addFlash('error', 'Tu Pokémon necesita alcanzar el nivel 10 para evolucionar.');
-            return $this->redirectToRoute('app_main');
-        }
-
         $currentPlantilla = $pokemon->getPokeplantilla();
         $evolutionId = $currentPlantilla->getEvolution();
+        $requiredLevel = $currentPlantilla->getEvolevel();
         
         if ($evolutionId === null) {
             $this->addFlash('error', 'Este Pokémon ya está en su evolución máxima.');
             return $this->redirectToRoute('app_main');
         }
 
+        if ($pokemon->getLevel() < $requiredLevel) {
+            $this->addFlash('error', 'Tu Pokémon necesita alcanzar el nivel ' . $requiredLevel . ' para evolucionar.');
+            return $this->redirectToRoute('app_main');
+        }
+
         try {
-            // Buscar si ya existe la plantilla de evolución por ID
             $evolucionPlantilla = $entityManager->getRepository(Pokeplantilla::class)
-                ->findOneBy(['id' => $evolutionId]);
+                ->find($evolutionId);
                 
             if (!$evolucionPlantilla) {
                 $this->addFlash('error', 'No se encontró la evolución para este Pokémon.');
                 return $this->redirectToRoute('app_main');
             }
 
-            // Evolucionar el Pokémon
             $pokemon->setPokeplantilla($evolucionPlantilla);
             $pokemon->setStrength($pokemon->getStrength() + 20);
             

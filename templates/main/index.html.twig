@@ -174,10 +174,10 @@
                            {% if pokemon.state == 0 %}disabled{% endif %}>
                             Entrenar
                         </a>
-                        {% if pokemon.level >= 10 and pokemon.pokeplantilla.evolution %}
+                        {% if pokemon.pokeplantilla.evolution and pokemon.level >= pokemon.pokeplantilla.evolevel %}
                             <a href="{{ path('app_pokemon_evolve', {'id': pokemon.id}) }}" 
                                class="btn btn-evolve">
-                                Evolucionar
+                                Evolucionar (Nivel {{ pokemon.pokeplantilla.evolevel }})
                             </a>
                         {% endif %}
                     </div>
