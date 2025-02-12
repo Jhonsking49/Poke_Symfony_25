@@ -45,11 +45,16 @@ final class PokemonsController extends AbstractController
         ]);
     }
 
-    #[Route('/pokemon/train/{id}', name: 'app_pokemon_train', methods: ['GET'])]
-    public function entrenar(int $id, Pokemons $pokemon, EntityManagerInterface $entityManager): Response
-
+    #[Route('/pokemon/train/{id}', name: 'app_pokemon_train')]
+    public function train(int $id, EntityManagerInterface $entityManager): Response
     {
         $pokemon = $entityManager->getRepository(Pokemons::class)->find($id);
+        
+        if ($pokemon->getState() === 0) {
+            $this->addFlash('error', 'Tu Pokémon está malherido y no puede entrenar.');
+            return $this->redirectToRoute('app_main');
+        }
+        
         $pokemon->setStrength($pokemon->getStrength() + 10);
         $entityManager->persist($pokemon);
         $entityManager->flush();
@@ -92,7 +97,8 @@ final class PokemonsController extends AbstractController
             $request->getSession()->set('temp_pokemon', [
                 'plantilla_id' => $pokePlantilla->getId(),
                 'level' => $pokemon->getLevel(),
-                'strength' => $pokemon->getStrength()
+                'strength' => $pokemon->getStrength(),
+                'img' => $pokePlantilla->getImg()
             ]);
 
             return $this->render('pokemons/available.html.twig', [
@@ -147,6 +153,7 @@ final class PokemonsController extends AbstractController
                 $pokemon->setStrength($tempPokemon['strength']);
                 $pokemon->setUser($this->getUser());
                 $pokemon->setPokeplantilla($pokePlantilla);
+                $pokemon->setState(1);
                 
                 $entityManager->persist($pokemon);
                 $entityManager->flush();

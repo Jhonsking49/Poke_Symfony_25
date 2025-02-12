@@ -53,7 +53,7 @@ final class FightsController extends AbstractController
             throw $this->createAccessDeniedException('Debes estar logueado para luchar.');
         }
 
-        // Obteners los Pokémons del usuario
+        // Obtener los Pokémons del usuario
         $userPokemons = $entityManager->getRepository(Pokemons::class)->findBy(['user' => $user]);
         
         if (empty($userPokemons)) {
@@ -64,63 +64,56 @@ final class FightsController extends AbstractController
         // Si es POST, procesar el combate
         if ($request->isMethod('POST')) {
             $selectedPokemonId = $request->request->get('pokeuser_id');
+            $enemyPokemonId = $request->request->get('pokenemy_id');
+            
             $selectedPokemon = $entityManager->getRepository(Pokemons::class)->find($selectedPokemonId);
+            $enemyPokemon = $entityManager->getRepository(Pokemons::class)->find($enemyPokemonId);
 
-            if (!$selectedPokemon || $selectedPokemon->getUser() !== $user) {
-                throw $this->createAccessDeniedException('Selección de Pokémon inválida.');
-            }
-
-            // Obtener el Pokémon enemigo de la sesión
-            $enemyPokemonId = $request->getSession()->get('enemy_pokemon_id');
-            $randomPokemon = $entityManager->getRepository(Pokemons::class)->find($enemyPokemonId);
-
-            if (!$randomPokemon) {
-                $this->addFlash('error', 'Error en el combate: Pokémon enemigo no encontrado.');
+            if (!$selectedPokemon || !$enemyPokemon) {
+                $this->addFlash('error', 'Error: Pokémon no encontrado.');
                 return $this->redirectToRoute('app_fights_new');
             }
 
-            // Calcular poder de combate
-            $poderUsuario = $selectedPokemon->getLevel() * $selectedPokemon->getStrength();
-            $poderEnemigo = $randomPokemon->getLevel() * $randomPokemon->getStrength();
+            if ($selectedPokemon->getState() === 0) {
+                $this->addFlash('error', 'Este Pokémon está malherido y no puede luchar.');
+                return $this->redirectToRoute('app_fights_new');
+            }
 
-            // Determinar ganador
+            // Calcular resultado
+            $poderUsuario = $selectedPokemon->getLevel() * $selectedPokemon->getStrength();
+            $poderEnemigo = $enemyPokemon->getLevel() * $enemyPokemon->getStrength();
+            
             $resultado = $poderUsuario > $poderEnemigo ? 1 : ($poderUsuario < $poderEnemigo ? 2 : 0);
+
+            // Crear y guardar el combate
+            $fight = new Fights();
+            $fight->setPokeuser($selectedPokemon);
+            $fight->setPokenemy($enemyPokemon);
+            $fight->setResult($resultado);
 
             if ($resultado === 1) {
                 $selectedPokemon->setLevel($selectedPokemon->getLevel() + 1);
-                $this->addFlash('success', '¡Has ganado el combate!');
-            } elseif ($resultado === 2) {
-                $this->addFlash('error', '¡Has perdido el combate!');
+                $this->addFlash('success', '¡Victoria! Tu Pokémon ha subido de nivel.');
             } else {
-                $this->addFlash('info', '¡El combate ha terminado en empate!');
+                $selectedPokemon->setState(0);
+                $this->addFlash('error', 'Has perdido el combate. Tu Pokémon está malherido.');
             }
-
-            // Guardar el combate
-            $fight = new Fights();
-            $fight->setPokeuser($selectedPokemon);
-            $fight->setPokenemy($randomPokemon);
-            $fight->setResult($resultado);
 
             $entityManager->persist($fight);
             $entityManager->flush();
 
-            // Limpiar la sesión
-            $request->getSession()->remove('enemy_pokemon_id');
-
-            return $this->redirectToRoute('app_main');
+            return $this->redirectToRoute('app_fights_index');
         }
 
-        // Si es GET, generar nuevo Pokémon enemigo
+        // Generar Pokémon enemigo aleatorio
         try {
-            // Generar Pokémon enemigo aleatorio
             $randomPokemonId = random_int(1, 151);
             $pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon/{$randomPokemonId}";
             $pokemonData = json_decode(file_get_contents($pokemonApiUrl), true);
 
-            // Buscar o crear plantilla
             $pokePlantilla = $entityManager->getRepository(Pokeplantilla::class)
                 ->findOneBy(['name' => $pokemonData['name']]);
-            
+
             if (!$pokePlantilla) {
                 $pokePlantilla = new Pokeplantilla();
                 $pokePlantilla->setName($pokemonData['name']);
@@ -129,18 +122,14 @@ final class FightsController extends AbstractController
                 $entityManager->persist($pokePlantilla);
             }
 
-            // Crear Pokémon enemigo
             $randomPokemon = new Pokemons();
             $randomPokemon->setLevel(random_int(1, 5));
             $randomPokemon->setStrength(random_int(8, 12));
-            $randomPokemon->setUser(null);
+            $randomPokemon->setState(1);
             $randomPokemon->setPokeplantilla($pokePlantilla);
             
             $entityManager->persist($randomPokemon);
             $entityManager->flush();
-
-            // Guardar ID en sesión
-            $request->getSession()->set('enemy_pokemon_id', $randomPokemon->getId());
 
             return $this->render('fights/new.html.twig', [
                 'user_pokemons' => $userPokemons,
