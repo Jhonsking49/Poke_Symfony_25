@@ -126,6 +126,19 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
+
+    .btn-evolve {
+        background-color: #ff6b6b;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-left: 8px;
+    }
+
+    .btn-evolve:hover {
+        background-color: #ff5252;
+    }
 </style>
 
 <div class="example-wrapper">
@@ -156,7 +169,17 @@
                         <span class="stat">Fuerza: {{ pokemon.strength }}</span>
                     </div>
                     <div class="card-buttons">
-                        <a href="{{ path('app_pokemon_train', {'id': pokemon.id}) }}" class="btn btn-train">Entrenar</a>
+                        <a href="{{ path('app_pokemon_train', {'id': pokemon.id}) }}" 
+                           class="btn btn-train" 
+                           {% if pokemon.state == 0 %}disabled{% endif %}>
+                            Entrenar
+                        </a>
+                        {% if pokemon.level >= 10 and pokemon.pokeplantilla.evolution %}
+                            <a href="{{ path('app_pokemon_evolve', {'id': pokemon.id}) }}" 
+                               class="btn btn-evolve">
+                                Evolucionar
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

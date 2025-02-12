@@ -87,6 +87,22 @@ final class PokemonsController extends AbstractController
                 $entityManager->flush();
             }
 
+            // Establecer evolución según el ID
+            $evoluciones = [
+                1 => 2,    // Bulbasaur -> Ivysaur
+                4 => 5,    // Charmander -> Charmeleon
+                7 => 8,    // Squirtle -> Wartortle
+                10 => 11,  // Caterpie -> Metapod
+                13 => 14,  // Weedle -> Kakuna
+                16 => 17,  // Pidgey -> Pidgeotto
+                19 => 20   // Rattata -> Raticate
+            ];
+
+            if (isset($evoluciones[$randomPokemonId])) {
+                $pokePlantilla->setEvolution($evoluciones[$randomPokemonId]);
+                $pokePlantilla->setEvolevel(10);
+            }
+
             // Crear nuevo Pokémon temporal
             $pokemon = new Pokemons();
             $pokemon->setLevel(1);
@@ -210,5 +226,52 @@ final class PokemonsController extends AbstractController
         }
 
         return $this->redirectToRoute('app_pokemons_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/pokemon/evolve/{id}', name: 'app_pokemon_evolve')]
+    public function evolve(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $pokemon = $entityManager->getRepository(Pokemons::class)->find($id);
+        
+        if (!$pokemon || $pokemon->getUser() !== $this->getUser()) {
+            throw $this->createNotFoundException('Pokémon no encontrado.');
+        }
+
+        if ($pokemon->getLevel() < 10) {
+            $this->addFlash('error', 'Tu Pokémon necesita alcanzar el nivel 10 para evolucionar.');
+            return $this->redirectToRoute('app_main');
+        }
+
+        $currentPlantilla = $pokemon->getPokeplantilla();
+        $evolutionId = $currentPlantilla->getEvolution();
+        
+        if ($evolutionId === null) {
+            $this->addFlash('error', 'Este Pokémon ya está en su evolución máxima.');
+            return $this->redirectToRoute('app_main');
+        }
+
+        try {
+            // Buscar si ya existe la plantilla de evolución por ID
+            $evolucionPlantilla = $entityManager->getRepository(Pokeplantilla::class)
+                ->findOneBy(['id' => $evolutionId]);
+                
+            if (!$evolucionPlantilla) {
+                $this->addFlash('error', 'No se encontró la evolución para este Pokémon.');
+                return $this->redirectToRoute('app_main');
+            }
+
+            // Evolucionar el Pokémon
+            $pokemon->setPokeplantilla($evolucionPlantilla);
+            $pokemon->setStrength($pokemon->getStrength() + 20);
+            
+            $entityManager->flush();
+            
+            $this->addFlash('success', '¡Tu Pokémon ha evolucionado a ' . $evolucionPlantilla->getName() . '!');
+            
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Ha ocurrido un error durante la evolución: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_main');
     }
 }
