@@ -55,31 +55,42 @@ final class FightsController extends AbstractController
         // Obtener los Pokémon del usuario
         $userPokemons = $entityManager->getRepository(Pokemons::class)->findBy(['user' => $user]);
 
-        // Obtener el total de Pokémon en la base de datos
-        $totalPokemons = $entityManager->createQueryBuilder()
-            ->select('COUNT(p.id)')
-            ->from(Pokemons::class, 'p')
-            ->where('p.user IS NULL')
-            ->getQuery()
-            ->getSingleScalarResult();
+        // Recuperar sesión
+        $session = $request->getSession();
 
-        if ($totalPokemons == 0) {
-            throw $this->createNotFoundException('No se encontraron Pokémon enemigos.');
-        }
+        if (!$session->has('pokenemy_id')) {
+            // Obtener el total de Pokémon en la base de datos
+            $totalPokemons = $entityManager->createQueryBuilder()
+                ->select('COUNT(p.id)')
+                ->from(Pokemons::class, 'p')
+                ->where('p.user IS NULL')
+                ->getQuery()
+                ->getSingleScalarResult();
 
-        // Obtener un Pokémon aleatorio
-        $randomOffset = random_int(0, $totalPokemons - 1);
-        $randomPokemon = $entityManager->createQueryBuilder()
-            ->select('p')
-            ->from(Pokemons::class, 'p')
-            ->where('p.user IS NULL')
-            ->setMaxResults(1)
-            ->setFirstResult($randomOffset)
-            ->getQuery()
-            ->getOneOrNullResult();
+            if ($totalPokemons == 0) {
+                throw $this->createNotFoundException('No se encontraron Pokémon enemigos.');
+            }
 
-        if (!$randomPokemon) {
-            throw $this->createNotFoundException('No se encontraron Pokémon enemigos.');
+            // Obtener un Pokémon aleatorio
+            $randomOffset = random_int(0, $totalPokemons - 1);
+            $randomPokemon = $entityManager->createQueryBuilder()
+                ->select('p')
+                ->from(Pokemons::class, 'p')
+                ->where('p.user IS NULL')
+                ->setMaxResults(1)
+                ->setFirstResult($randomOffset)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if (!$randomPokemon) {
+                throw $this->createNotFoundException('No se encontraron Pokémon enemigos.');
+            }
+
+            // Guardar en la sesión
+            $session->set('pokenemy_id', $randomPokemon->getId());
+        } else {
+            // Recuperar Pokémon de la sesión
+            $randomPokemon = $entityManager->getRepository(Pokemons::class)->find($session->get('pokenemy_id'));
         }
 
         if ($request->isMethod('POST')) {
@@ -87,6 +98,14 @@ final class FightsController extends AbstractController
 
             if (!$selectedPokemon || $selectedPokemon->getUser() !== $user) {
                 throw $this->createAccessDeniedException('Selección de Pokémon inválida.');
+            }
+
+            // Recuperar el Pokémon enemigo de la sesión
+            $pokenemyId = $session->get('pokenemy_id');
+            $randomPokemon = $entityManager->getRepository(Pokemons::class)->find($pokenemyId);
+
+            if (!$randomPokemon) {
+                throw new \Exception('No se pudo recuperar el Pokémon enemigo de la sesión.');
             }
 
             // Calcular poder de combate
@@ -125,9 +144,12 @@ final class FightsController extends AbstractController
             $fight->setPokeuser($selectedPokemon);
             $fight->setPokenemy($randomPokemon);
             $fight->setResult($resultado);
-            
+
             $entityManager->persist($fight);
             $entityManager->flush();
+
+            // Limpiar la sesión después del combate
+            $session->remove('pokenemy_id');
 
             return $this->redirectToRoute('app_main');
         }
@@ -137,6 +159,7 @@ final class FightsController extends AbstractController
             'random_pokemon' => $randomPokemon,
         ]);
     }
+
 
     #[Route('/{id}', name: 'app_fights_show', methods: ['GET'])]
     public function show(Fights $fight): Response
