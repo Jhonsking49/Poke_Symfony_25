@@ -71,7 +71,7 @@
     </div>
 
     <div class="buttons-container">
-        <a href="{{ path('app_pokemon_capture', {'id': pokemon.id}) }}" class="btn btn-capture">¡Capturar!</a>
+        <a href="{{ path('app_pokemon_capture', {'random_id': random_id}) }}" class="btn btn-primary">Capturar</a>
         <a href="{{ path('app_pokemons_available') }}" class="btn btn-skip">Buscar otro</a>
         <a href="{{ path('app_main') }}" class="btn btn-skip">Volver al inicio</a>
     </div>

@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Constraints\Length;
 
 #[Route('/pokemons')]
 final class PokemonsController extends AbstractController
@@ -43,39 +44,6 @@ final class PokemonsController extends AbstractController
             'form' => $form,
         ]);
     }
-    #[Route('/init', name: 'app_pokemons_init', methods: ['GET'])]
-    public function init(PokemonsRepository $pokemonsRepository, EntityManagerInterface $entityManager, PokeplantillaRepository $pokeplantillaRepository): Response
-    {
-        for ($i = 1; $i < 50; $i++) { 
-            // Fetch Pokemon data from PokeAPI
-            $pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon/{$i}";
-            $pokemonData = json_decode(file_get_contents($pokemonApiUrl), true);
-    
-            $pokemon = new Pokemons();
-            $pokePlantilla = new Pokeplantilla();
-    
-            // Set Pokemon name from API response
-            $pokePlantilla->setName($pokemonData['name']);
-    
-            // Set type (first type)
-            $pokePlantilla->setType($pokemonData['types'][0]['type']['name']);
-    
-            $pokemon->setLevel(1);
-            $pokemon->setStrength(10);
-            $pokemon->setImg("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/{$i}.svg");
-            $pokemon->setUser(null);
-            
-            // Set the Pokeplantilla for this Pokemon
-            $pokemon->setPokeplantilla($pokePlantilla);
-            $entityManager->persist($pokePlantilla);
-            $entityManager->persist($pokemon);
-        }
-        $entityManager->flush();
-        return $this->render('pokemons/index.html.twig', [
-            'pokemons' => $pokemonsRepository->findAll(),
-        ]);
-    
-    }
 
     #[Route('/pokemon/train/{id}', name: 'app_pokemon_train', methods: ['GET'])]
     public function entrenar(int $id, Pokemons $pokemon, EntityManagerInterface $entityManager): Response
@@ -90,35 +58,55 @@ final class PokemonsController extends AbstractController
     }
 
     #[Route('/available-pokemon', name: 'app_pokemons_available', methods: ['GET'])]
-    public function availablePokemon(EntityManagerInterface $entityManager): Response
+    public function availablePokemon(
+        Request $request,
+        EntityManagerInterface $entityManager, 
+        PokemonsRepository $pokemonsRepository,
+        PokeplantillaRepository $pokeplantillaRepository
+    ): Response
     {
-        // Obtener el total de Pokémon sin dueño
-        $totalPokemons = $entityManager->createQueryBuilder()
-            ->select('COUNT(p.id)')
-            ->from(Pokemons::class, 'p')
-            ->where('p.user IS NULL')
-            ->getQuery()
-            ->getSingleScalarResult();
+        try {
+            // Generar un ID aleatorio entre 1 y 151
+            $randomPokemonId = random_int(1, 151);
+            $pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon/{$randomPokemonId}";
+            $pokemonData = json_decode(file_get_contents($pokemonApiUrl), true);
+            
+            // Buscar si ya existe una plantilla para este Pokémon
+            $pokePlantilla = $pokeplantillaRepository->findOneBy(['name' => $pokemonData['name']]);
+            
+            // Si no existe la plantilla, la creamos
+            if (!$pokePlantilla) {
+                $pokePlantilla = new Pokeplantilla();
+                $pokePlantilla->setName($pokemonData['name']);
+                $pokePlantilla->setType($pokemonData['types'][0]['type']['name']);
+                $entityManager->persist($pokePlantilla);
+                $entityManager->flush();
+            }
 
-        if ($totalPokemons == 0) {
-            $this->addFlash('error', 'No hay pokémons disponibles para capturar.');
+            // Crear nuevo Pokémon temporal
+            $pokemon = new Pokemons();
+            $pokemon->setLevel(1);
+            $pokemon->setStrength(10);
+            $pokemon->setImg("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/{$randomPokemonId}.svg");
+            $pokemon->setPokeplantilla($pokePlantilla);
+
+            // Guardar datos en la sesión
+            $request->getSession()->set('temp_pokemon', [
+                'plantilla_id' => $pokePlantilla->getId(),
+                'img' => $pokemon->getImg(),
+                'level' => $pokemon->getLevel(),
+                'strength' => $pokemon->getStrength()
+            ]);
+
+            return $this->render('pokemons/available.html.twig', [
+                'pokemon' => $pokemon,
+                'random_id' => $randomPokemonId // Pasamos el ID aleatorio a la vista
+            ]);
+
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Ha ocurrido un error al obtener el Pokémon.');
             return $this->redirectToRoute('app_main');
         }
-
-        // Obtener un Pokémon aleatorio
-        $randomOffset = random_int(0, $totalPokemons - 1);
-        $randomPokemon = $entityManager->createQueryBuilder()
-            ->select('p')
-            ->from(Pokemons::class, 'p')
-            ->where('p.user IS NULL')
-            ->setMaxResults(1)
-            ->setFirstResult($randomOffset)
-            ->getQuery()
-            ->getOneOrNullResult();
-
-        return $this->render('pokemons/available.html.twig', [
-            'pokemon' => $randomPokemon,
-        ]);
     }
 
     #[Route('/mis-pokemons', name: 'app_pokemons_mis_pokemons', methods: ['GET'])]
@@ -129,31 +117,59 @@ final class PokemonsController extends AbstractController
         ]);
     }
 
-    #[Route('/pokemon/capture/{id}', name: 'app_pokemon_capture', methods: ['GET'])]
-    public function capture(int $id, EntityManagerInterface $entityManager, PokemonsRepository $pokemonsRepository): Response
+    #[Route('/pokemon/capture/{random_id}', name: 'app_pokemon_capture', methods: ['GET'])]
+    public function capture(
+        int $random_id,
+        Request $request, 
+        EntityManagerInterface $entityManager
+    ): Response
     {
         if (!$this->getUser()) {
             throw $this->createAccessDeniedException('Debes estar logueado para capturar pokémons.');
         }
 
-        $pokemon = $pokemonsRepository->find($id);
-        
-        if (!$pokemon) {
-            throw $this->createNotFoundException('No se encontró el Pokémon.');
+        try {
+            // Recuperar datos de la sesión
+            $tempPokemon = $request->getSession()->get('temp_pokemon');
+            if (!$tempPokemon) {
+                throw new \Exception('No hay ningún Pokémon disponible para capturar.');
+            }
+
+            $pokePlantilla = $entityManager->getRepository(Pokeplantilla::class)->find($tempPokemon['plantilla_id']);
+            if (!$pokePlantilla) {
+                throw new \Exception('Plantilla de Pokémon no encontrada.');
+            }
+
+            // Implementar probabilidad de captura del 60%
+            $probabilidadCaptura = random_int(1, 100);
+            
+            if ($probabilidadCaptura <= 60) {
+                // Captura exitosa
+                $pokemon = new Pokemons();
+                $pokemon->setLevel($tempPokemon['level']);
+                $pokemon->setStrength($tempPokemon['strength']);
+                $pokemon->setImg($tempPokemon['img']);
+                $pokemon->setUser($this->getUser());
+                $pokemon->setPokeplantilla($pokePlantilla);
+                
+                $entityManager->persist($pokemon);
+                $entityManager->flush();
+                
+                $this->addFlash('success', '¡Has capturado el Pokémon con éxito!');
+            } else {
+                // Captura fallida
+                $this->addFlash('error', 'El Pokémon se ha escapado...');
+            }
+
+            // Limpiar la sesión
+            $request->getSession()->remove('temp_pokemon');
+
+            return $this->redirectToRoute('app_pokemons_available');
+
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Ha ocurrido un error durante la captura: ' . $e->getMessage());
+            return $this->redirectToRoute('app_main');
         }
-
-        if ($pokemon->getUser() !== null) {
-            throw $this->createAccessDeniedException('Este Pokémon ya tiene dueño.');
-        }
-
-        $resultado = $pokemonsRepository->intentarCapturarPokemon($pokemon, $this->getUser()->getId());
-        
-        $this->addFlash(
-            $resultado['exito'] ? 'success' : 'error',
-            $resultado['mensaje']
-        );
-
-        return $this->redirectToRoute('app_pokemons_available');
     }
 
     #[Route('/{id}', name: 'app_pokemons_show', methods: ['GET'])]
