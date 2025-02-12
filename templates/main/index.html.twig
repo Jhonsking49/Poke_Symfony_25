@@ -152,6 +152,12 @@
                 <a href="{{ path('app_fights_new') }}" class="btn btn-train">Nueva lucha</a>
                 <a href="{{ path('app_fights_user_history') }}" class="btn btn-primary">Mi Historial</a>
                 <a href="{{ path('app_fights_pvp_new') }}" class="btn btn-danger">Luchar contra Entrenador</a>
+                <a href="{{ path('app_fights_pending') }}" class="btn btn-warning">
+                    Partidas Disponibles
+                    {% if pending_challenges > 0 %}
+                        <span class="badge">{{ pending_challenges }}</span>
+                    {% endif %}
+                </a>
             {% else %}
                 <a href="{{ path('app_login') }}" class="btn btn-primary">Login</a>
                 <a href="{{ path('app_register') }}" class="btn btn-primary">Register</a>

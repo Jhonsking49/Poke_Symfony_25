@@ -16,12 +16,6 @@
     <div class="fight-buttons">
         <a href="{{ path('app_fights_new') }}" class="btn btn-primary">Nuevo Combate vs CPU</a>
         <a href="{{ path('app_fights_pvp_new') }}" class="btn btn-danger">Luchar contra Entrenador</a>
-        <a href="{{ path('app_fights_pending') }}" class="btn btn-warning">
-            Partidas Disponibles
-            {% if pending_challenges > 0 %}
-                <span class="badge">{{ pending_challenges }}</span>
-            {% endif %}
-        </a>
     </div>
 
     <h2>Historial de Combates</h2>
