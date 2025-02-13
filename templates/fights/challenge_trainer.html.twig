@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Desafiar Entrenador{% endblock %}
+
+{% block body %}
+    <h1>Desafiar a un Entrenador</h1>
+
+    <form method="post" class="challenge-form">
+        <div class="form-group">
+            <label>Elige el entrenador:</label>
+            <select name="target_trainer_id" required>
+                {% for trainer in trainers %}
+                    <option value="{{ trainer.id }}">
+                        {{ trainer.username }} 
+                        (Pokémon activos: {{ trainer.getActivePokemons|length }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Elige tu Pokémon:</label>
+            <select name="pokemon_id" required>
+                {% for pokemon in user_pokemons %}
+                    <option value="{{ pokemon.id }}">
+                        {{ pokemon.pokeplantilla.name }} 
+                        (Nivel: {{ pokemon.level }}, Fuerza: {{ pokemon.strength }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enviar Desafío</button>
+    </form>
+
+    <a href="{{ path('app_fights_index') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}

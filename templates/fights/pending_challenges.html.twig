@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Desafíos Pendientes{% endblock %}
+
+{% block body %}
+    <h1>Desafíos Pendientes</h1>
+
+    {% if pending_challenges|length > 0 %}
+        <div class="challenges-list">
+            {% for challenge in pending_challenges %}
+                <div class="challenge-card">
+                    <h3>Desafío de {{ challenge.challenger.username }}</h3>
+                    <p>Pokémon desafiante: {{ challenge.challengerPokemon.pokeplantilla.name }}</p>
+                    <p>Nivel: {{ challenge.challengerPokemon.level }} | Fuerza: {{ challenge.challengerPokemon.strength }}</p>
+                    <a href="{{ path('app_fights_accept_challenge', {'id': challenge.id}) }}" 
+                       class="btn btn-success">Aceptar Desafío</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No tienes desafíos pendientes.</p>
+    {% endif %}
+
+    <a href="{{ path('app_main') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}

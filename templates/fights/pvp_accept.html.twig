@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Aceptar Desafío{% endblock %}
+
+{% block body %}
+    <h1>¡Te han desafiado!</h1>
+
+    <div class="challenge-info">
+        <p>Entrenador desafiante: {{ challenge.challenger.username }}</p>
+        <p>Pokémon desafiante: {{ challenge.challengerPokemon.pokeplantilla.name }}</p>
+    </div>
+
+    <form method="post" class="pvp-form">
+        <div class="form-group">
+            <label>Elige tu Pokémon para el combate:</label>
+            <select name="defender_pokemon_id" required>
+                {% for pokemon in user_pokemons %}
+                    <option value="{{ pokemon.id }}">
+                        {{ pokemon.pokeplantilla.name }} 
+                        (Nivel: {{ pokemon.level }}, Fuerza: {{ pokemon.strength }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">¡Aceptar el desafío!</button>
+    </form>
+
+    <a href="{{ path('app_fights_index') }}" class="btn btn-secondary">Rechazar</a>
+{% endblock %}

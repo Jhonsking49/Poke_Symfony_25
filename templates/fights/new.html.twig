@@ -89,11 +89,13 @@
         <!-- Selección de Pokémon del usuario -->
         <div class="user-pokemons">
             <h2>Your Pokémons</h2>
-            <form method="post">
+            <form method="post" action="{{ path('app_fights_new') }}">
                 <select name="pokeuser_id" required>
                     {% for pokemon in user_pokemons %}
-                        <option value="{{ pokemon.id }}">
-                            {{ pokemon.pokeplantilla.name }} (Level: {{ pokemon.level }}, Strength: {{ pokemon.strength }})
+                        <option value="{{ pokemon.id }}" {% if pokemon.state == 0 %}disabled{% endif %}>
+                            {{ pokemon.pokeplantilla.name }} 
+                            (Level: {{ pokemon.level }}, Strength: {{ pokemon.strength }})
+                            {% if pokemon.state == 0 %} - Malherido {% endif %}
                         </option>
                     {% endfor %}
                 </select>

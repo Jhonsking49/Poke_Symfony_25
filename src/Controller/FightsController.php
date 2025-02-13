@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Pokemons;
-use App\Repository\PokemonsRepository;
 
 #[Route('/fights')]
 final class FightsController extends AbstractController
@@ -38,10 +37,20 @@ final class FightsController extends AbstractController
     }
 
     #[Route(name: 'app_fights_index', methods: ['GET'])]
-    public function index(FightsRepository $fightsRepository): Response
+    public function index(FightsRepository $fightsRepository, EntityManagerInterface $entityManager): Response
     {
+        $user = $this->getUser();
+        
+        // Obtener el número de desafíos pendientes
+        $pendingChallenges = 0;
+        if ($user) {
+            $pendingChallenges = $entityManager->getRepository(PvpChallenge::class)
+                ->count(['targetTrainer' => $user, 'status' => 'pending']);
+        }
+
         return $this->render('fights/index.html.twig', [
             'fights' => $fightsRepository->findAll(),
+            'pending_challenges' => $pendingChallenges
         ]);
     }
 
@@ -53,86 +62,49 @@ final class FightsController extends AbstractController
             throw $this->createAccessDeniedException('Debes estar logueado para luchar.');
         }
 
-        // Obtener los Pokémon del usuario
+        // Obtener los Pokémons del usuario
         $userPokemons = $entityManager->getRepository(Pokemons::class)->findBy(['user' => $user]);
-
-        // Recuperar sesión
-        $session = $request->getSession();
-
-        if (!$session->has('pokenemy_id')) {
-            // Obtener el total de Pokémon en la base de datos
-            $totalPokemons = $entityManager->createQueryBuilder()
-                ->select('COUNT(p.id)')
-                ->from(Pokemons::class, 'p')
-                ->where('p.user IS NULL')
-                ->getQuery()
-                ->getSingleScalarResult();
-
-            if ($totalPokemons == 0) {
-                throw $this->createNotFoundException('No se encontraron Pokémon enemigos.');
-            }
-
-            // Obtener un Pokémon aleatorio
-            $randomOffset = random_int(0, $totalPokemons - 1);
-            $randomPokemon = $entityManager->createQueryBuilder()
-                ->select('p')
-                ->from(Pokemons::class, 'p')
-                ->where('p.user IS NULL')
-                ->setMaxResults(1)
-                ->setFirstResult($randomOffset)
-                ->getQuery()
-                ->getOneOrNullResult();
-
-            if (!$randomPokemon) {
-                throw $this->createNotFoundException('No se encontraron Pokémon enemigos.');
-            }
-
-            // Guardar en la sesión
-            $session->set('pokenemy_id', $randomPokemon->getId());
-        } else {
-            // Recuperar Pokémon de la sesión
-            $randomPokemon = $entityManager->getRepository(Pokemons::class)->find($session->get('pokenemy_id'));
+        
+        if (empty($userPokemons)) {
+            $this->addFlash('error', 'Necesitas tener al menos un Pokémon para luchar.');
+            return $this->redirectToRoute('app_main');
         }
 
+        // Si es POST, procesar el combate
         if ($request->isMethod('POST')) {
-            $selectedPokemon = $entityManager->getRepository(Pokemons::class)->find($request->request->get('pokeuser_id'));
+            $selectedPokemonId = $request->request->get('pokeuser_id');
+            $enemyPokemonId = $request->request->get('pokenemy_id');
+            
+            $selectedPokemon = $entityManager->getRepository(Pokemons::class)->find($selectedPokemonId);
+            $enemyPokemon = $entityManager->getRepository(Pokemons::class)->find($enemyPokemonId);
 
-            if (!$selectedPokemon || $selectedPokemon->getUser() !== $user) {
-                throw $this->createAccessDeniedException('Selección de Pokémon inválida.');
+            if (!$selectedPokemon || !$enemyPokemon) {
+                $this->addFlash('error', 'Error: Pokémon no encontrado.');
+                return $this->redirectToRoute('app_fights_new');
             }
 
-            // Recuperar el Pokémon enemigo de la sesión
-            $pokenemyId = $session->get('pokenemy_id');
-            $randomPokemon = $entityManager->getRepository(Pokemons::class)->find($pokenemyId);
-
-            if (!$randomPokemon) {
-                throw new \Exception('No se pudo recuperar el Pokémon enemigo de la sesión.');
+            if ($selectedPokemon->getState() === 0) {
+                $this->addFlash('error', 'Este Pokémon está malherido y no puede luchar.');
+                return $this->redirectToRoute('app_fights_new');
             }
 
-            // Calcular poder de combate
+            // Calcular resultado
             $poderUsuario = $selectedPokemon->getLevel() * $selectedPokemon->getStrength();
-            $poderEnemigo = $randomPokemon->getLevel() * $randomPokemon->getStrength();
-
-            // Determinar ganador
+            $poderEnemigo = $enemyPokemon->getLevel() * $enemyPokemon->getStrength();
+            
             $resultado = $poderUsuario > $poderEnemigo ? 1 : ($poderUsuario < $poderEnemigo ? 2 : 0);
 
             // Subir nivel al ganador y mostrar mensaje apropiado
             if ($resultado === 1) {
                 $selectedPokemon->setLevel($selectedPokemon->getLevel() + 1);
                 $this->addFlash('success', sprintf(
-                    '¡Tu %s ha ganado el combate contra %s!',
+                    '¡Tu %s ha ganado el combate contra %s y ha subido al nivel %d!',
                     $selectedPokemon->getPokeplantilla()->getName(),
-                    $randomPokemon->getPokeplantilla()->getName()
+                    $randomPokemon->getPokeplantilla()->getName(),
+                    $selectedPokemon->getLevel()
                 ));
-            
-                $entityManager->persist($selectedPokemon);
-                $entityManager->flush();
-                return $this->redirectToRoute('app_fights_winneroptions', [
-                    'winner_pokemon_id' => $selectedPokemon->getId(),
-                    'enemy_pokemon_id' => $randomPokemon->getId(),
-                ]);
             } elseif ($resultado === 2) {
-                $pokemonsRepository->pokedeadalive($selectedPokemon);
+                $randomPokemon->setLevel($randomPokemon->getLevel() + 1);
                 $this->addFlash('error', sprintf(
                     '¡Tu %s ha perdido el combate contra %s!',
                     $selectedPokemon->getPokeplantilla()->getName(),
@@ -149,24 +121,29 @@ final class FightsController extends AbstractController
             // Guardar el combate en el historial
             $fight = new Fights();
             $fight->setPokeuser($selectedPokemon);
-            $fight->setPokenemy($randomPokemon);
+            $fight->setPokenemy($enemyPokemon);
             $fight->setResult($resultado);
 
-            $entityManager->persist($fight);
-            $entityManager->flush();
+            if ($resultado === 1) {
+                // Persistir el combate primero
+                $entityManager->persist($fight);
+                $entityManager->flush();
 
             // Limpiar la sesión después del combate
-            if($resultado != 1) {
-                $session->remove('pokenemy_id');
-            }
+            $session->remove('pokenemy_id');
 
             return $this->redirectToRoute('app_main');
         }
 
-        return $this->render('fights/new.html.twig', [
-            'user_pokemons' => $userPokemons,
-            'random_pokemon' => $randomPokemon,
-        ]);
+            return $this->render('fights/new.html.twig', [
+                'user_pokemons' => $userPokemons,
+                'random_pokemon' => $randomPokemon,
+            ]);
+
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Error al generar el Pokémon enemigo.');
+            return $this->redirectToRoute('app_main');
+        }
     }
 
     #[Route('/winneroptions', name: 'app_fights_winneroptions', methods: ['GET', 'POST'])]
@@ -296,5 +273,219 @@ final class FightsController extends AbstractController
         }
 
         return $this->redirectToRoute('app_fights_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/fights/level-up/{fight_id}', name: 'app_fights_level_up')]
+    public function levelUp(int $fight_id, EntityManagerInterface $entityManager): Response
+    {
+        $fight = $entityManager->getRepository(Fights::class)->find($fight_id);
+        if (!$fight || $fight->getPokeuser()->getUser() !== $this->getUser()) {
+            throw $this->createNotFoundException('Combate no encontrado.');
+        }
+
+        $pokemon = $fight->getPokeuser();
+        $pokemon->setLevel($pokemon->getLevel() + 1);
+        $entityManager->flush();
+        
+        $this->addFlash('success', '¡Tu Pokémon ha subido de nivel!');
+        return $this->redirectToRoute('app_fights_index');
+    }
+
+    #[Route('/fights/capture/{fight_id}', name: 'app_fights_capture')]
+    public function captureDefeated(int $fight_id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $fight = $entityManager->getRepository(Fights::class)->find($fight_id);
+        if (!$fight) {
+            throw $this->createNotFoundException('Combate no encontrado.');
+        }
+
+        $defeatedPokemon = $request->getSession()->get('defeated_pokemon');
+        if (!$defeatedPokemon) {
+            $this->addFlash('error', 'No hay ningún Pokémon disponible para capturar.');
+            return $this->redirectToRoute('app_fights_index');
+        }
+
+        $pokePlantilla = $entityManager->getRepository(Pokeplantilla::class)->find($defeatedPokemon['plantilla_id']);
+        
+        $newPokemon = new Pokemons();
+        $newPokemon->setPokeplantilla($pokePlantilla);
+        $newPokemon->setLevel($defeatedPokemon['level']);
+        $newPokemon->setStrength($defeatedPokemon['strength']);
+        $newPokemon->setState(1);
+        $newPokemon->setUser($this->getUser());
+        
+        $entityManager->persist($newPokemon);
+        $entityManager->flush();
+        
+        $request->getSession()->remove('defeated_pokemon');
+        
+        $this->addFlash('success', '¡Has capturado al Pokémon derrotado!');
+        return $this->redirectToRoute('app_fights_index');
+    }
+
+    #[Route('/fights/heal/{fight_id}', name: 'app_fights_heal')]
+    public function healOptions(int $fight_id, EntityManagerInterface $entityManager): Response
+    {
+        $fight = $entityManager->getRepository(Fights::class)->find($fight_id);
+        if (!$fight) {
+            throw $this->createNotFoundException('Combate no encontrado.');
+        }
+
+        $injuredPokemons = $entityManager->getRepository(Pokemons::class)
+            ->findBy(['user' => $this->getUser(), 'state' => 0]);
+        
+        return $this->render('fights/heal_options.html.twig', [
+            'injured_pokemons' => $injuredPokemons,
+            'fight_id' => $fight_id
+        ]);
+    }
+
+    #[Route('/fights/heal/{fight_id}/pokemon/{pokemon_id}', name: 'app_fights_heal_pokemon')]
+    public function healPokemon(int $fight_id, int $pokemon_id, EntityManagerInterface $entityManager): Response
+    {
+        $pokemon = $entityManager->getRepository(Pokemons::class)->find($pokemon_id);
+        
+        if (!$pokemon || $pokemon->getUser() !== $this->getUser()) {
+            throw $this->createNotFoundException('Pokémon no encontrado.');
+        }
+
+        if ($pokemon->getState() !== 0) {
+            $this->addFlash('error', 'Este Pokémon no está malherido.');
+            return $this->redirectToRoute('app_fights_index');
+        }
+
+        $pokemon->setState(1);
+        $entityManager->flush();
+        
+        $this->addFlash('success', '¡' . $pokemon->getPokeplantilla()->getName() . ' ha sido curado!');
+        return $this->redirectToRoute('app_fights_index');
+    }
+
+    #[Route('/fights/pvp/new', name: 'app_fights_pvp_new', methods: ['GET', 'POST'])]
+    public function newPvpFight(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('Debes estar logueado para luchar.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $pokemonId = $request->request->get('pokeuser_id');
+            $targetTrainerId = $request->request->get('target_trainer_id');
+            
+            $pokemon = $entityManager->getRepository(Pokemons::class)->find($pokemonId);
+            $targetTrainer = $entityManager->getRepository(User::class)->find($targetTrainerId);
+            
+            if (!$pokemon || !$targetTrainer) {
+                $this->addFlash('error', 'Error al procesar el desafío.');
+                return $this->redirectToRoute('app_main');
+            }
+
+            $challenge = new PvpChallenge();
+            $challenge->setChallenger($user);
+            $challenge->setTargetTrainer($targetTrainer);
+            $challenge->setChallengerPokemon($pokemon);
+            $challenge->setStatus('pending');
+            
+            $entityManager->persist($challenge);
+            $entityManager->flush();
+            
+            $this->addFlash('success', '¡Desafío enviado a ' . $targetTrainer->getUsername() . '!');
+            return $this->redirectToRoute('app_main');
+        }
+
+        // Resto del código existente para GET
+        $userPokemons = $entityManager->getRepository(Pokemons::class)
+            ->findBy(['user' => $user, 'state' => 1]);
+
+        $otherTrainers = $entityManager->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u != :currentUser')
+            ->setParameter('currentUser', $user)
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('fights/pvp_new.html.twig', [
+            'user_pokemons' => $userPokemons,
+            'other_trainers' => $otherTrainers
+        ]);
+    }
+
+    #[Route('/fights/accept-challenge/{id}', name: 'app_fights_accept_challenge', methods: ['GET', 'POST'])]
+    public function acceptChallenge(int $id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $challenge = $entityManager->getRepository(PvpChallenge::class)->find($id);
+        if (!$challenge || $challenge->getTargetTrainer() !== $this->getUser()) {
+            throw $this->createNotFoundException('Desafío no encontrado.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $defenderPokemonId = $request->request->get('defender_pokemon_id');
+            $defenderPokemon = $entityManager->getRepository(Pokemons::class)->find($defenderPokemonId);
+            
+            if (!$defenderPokemon) {
+                $this->addFlash('error', 'Pokémon no encontrado.');
+                return $this->redirectToRoute('app_fights_pending');
+            }
+
+            // Calcular resultado
+            $poderDesafiante = $challenge->getChallengerPokemon()->getLevel() * $challenge->getChallengerPokemon()->getStrength();
+            $poderDefensor = $defenderPokemon->getLevel() * $defenderPokemon->getStrength();
+            
+            $resultado = $poderDesafiante > $poderDefensor ? 1 : ($poderDesafiante < $poderDefensor ? 2 : 0);
+
+            // Crear el combate para el desafiante
+            $fightDesafiante = new Fights();
+            $fightDesafiante->setPokeuser($challenge->getChallengerPokemon());
+            $fightDesafiante->setPokenemy($defenderPokemon);
+            $fightDesafiante->setResult($resultado);
+
+            // Crear el combate para el defensor (resultado invertido)
+            $fightDefensor = new Fights();
+            $fightDefensor->setPokeuser($defenderPokemon);
+            $fightDefensor->setPokenemy($challenge->getChallengerPokemon());
+            $fightDefensor->setResult($resultado === 1 ? 2 : ($resultado === 2 ? 1 : 0));
+
+            // Actualizar estado de los pokémon según el resultado
+            if ($resultado === 1) {
+                $defenderPokemon->setState(0);
+            } else {
+                $challenge->getChallengerPokemon()->setState(0);
+            }
+
+            // Marcar el desafío como completado
+            $challenge->setStatus('completed');
+
+            // Persistir todos los cambios
+            $entityManager->persist($fightDesafiante);
+            $entityManager->persist($fightDefensor);
+            $entityManager->flush();
+
+            $this->addFlash('success', '¡Combate finalizado!');
+            return $this->redirectToRoute('app_main');
+        }
+
+        return $this->render('fights/pvp_accept.html.twig', [
+            'challenge' => $challenge,
+            'user_pokemons' => $entityManager->getRepository(Pokemons::class)
+                ->findBy(['user' => $this->getUser(), 'state' => 1])
+        ]);
+    }
+
+    #[Route('/fights/pending', name: 'app_fights_pending')]
+    public function pendingFights(EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('Debes estar logueado para ver los desafíos pendientes.');
+        }
+
+        // Obtener desafíos pendientes donde el usuario es el objetivo
+        $pendingChallenges = $entityManager->getRepository(PvpChallenge::class)
+            ->findBy(['targetTrainer' => $user, 'status' => 'pending']);
+
+        return $this->render('fights/pending_challenges.html.twig', [
+            'pending_challenges' => $pendingChallenges
+        ]);
     }
 }

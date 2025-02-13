@@ -126,6 +126,19 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
+
+    .btn-evolve {
+        background-color: #ff6b6b;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-left: 8px;
+    }
+
+    .btn-evolve:hover {
+        background-color: #ff5252;
+    }
 </style>
 
 <div class="example-wrapper">
@@ -138,12 +151,85 @@
                 <a href="{{ path('app_pokemons_available') }}" class="btn btn-primary">Capturar Pokémon</a>
                 <a href="{{ path('app_fights_new') }}" class="btn btn-train">Nueva lucha</a>
                 <a href="{{ path('app_fights_user_history') }}" class="btn btn-primary">Mi Historial</a>
+                <a href="{{ path('app_fights_pvp_new') }}" class="btn btn-danger">Luchar contra Entrenador</a>
+                <a href="{{ path('app_fights_pending') }}" class="btn btn-warning">
+                    Partidas Disponibles
+                    {% if pending_challenges > 0 %}
+                        <span class="badge">{{ pending_challenges }}</span>
+                    {% endif %}
+                </a>
             {% else %}
                 <a href="{{ path('app_login') }}" class="btn btn-primary">Login</a>
                 <a href="{{ path('app_register') }}" class="btn btn-primary">Register</a>
             {% endif %}
         </div>
     </div>
+
+    <style>
+        .example-wrapper {
+            width: 95%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-train {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin: 0;
+            color: #333;
+        }
+
+        h4 {
+            margin: 0 20px 0 0;
+            color: #666;
+        }
+    </style>
 
     <div class="pokemon-grid">
         {% for pokemon in pokemons %}
@@ -156,7 +242,17 @@
                         <span class="stat">Fuerza: {{ pokemon.strength }}</span>
                     </div>
                     <div class="card-buttons">
-                        <a href="{{ path('app_pokemon_train', {'id': pokemon.id}) }}" class="btn btn-train">Entrenar</a>
+                        <a href="{{ path('app_pokemon_train', {'id': pokemon.id}) }}" 
+                           class="btn btn-train" 
+                           {% if pokemon.state == 0 %}disabled{% endif %}>
+                            Entrenar
+                        </a>
+                        {% if pokemon.pokeplantilla.evolution and pokemon.level >= pokemon.pokeplantilla.evolevel %}
+                            <a href="{{ path('app_pokemon_evolve', {'id': pokemon.id}) }}" 
+                               class="btn btn-evolve">
+                                Evolucionar (Nivel {{ pokemon.pokeplantilla.evolevel }})
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

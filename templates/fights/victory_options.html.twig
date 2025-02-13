@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}¡Victoria!{% endblock %}
+
+{% block body %}
+<div class="victory-options">
+    <h2>¡Has ganado el combate!</h2>
+    <p>¿Qué quieres hacer?</p>
+    
+    <div class="options-grid">
+        <a href="{{ path('app_fights_level_up', {'fight_id': fight_id}) }}" class="btn btn-success">
+            Subir de nivel
+        </a>
+        
+        <a href="{{ path('app_fights_capture', {'fight_id': fight_id}) }}" class="btn btn-primary">
+            Intentar capturar al Pokémon derrotado
+        </a>
+        
+        {% if app.user.getInjuredPokemons|length > 0 %}
+            <a href="{{ path('app_fights_heal', {'fight_id': fight_id}) }}" class="btn btn-info">
+                Curar un Pokémon malherido
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.victory-options {
+    text-align: center;
+    padding: 2rem;
+}
+
+.options-grid {
+    display: grid;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.btn {
+    padding: 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

@@ -150,4 +150,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function getInjuredPokemons(): array
+    {
+        return $this->pokemons->filter(function(Pokemons $pokemon) {
+            return $pokemon->getState() === 0;
+        })->toArray();
+    }
 }

@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Historial de Combates{% endblock %}
+{% block title %}Combates Pokémon{% endblock %}
 
 {% block body %}
-    <h1>Historial de Combates</h1>
+    <h1>Combates Pokémon</h1>
 
     {% for label, messages in app.flashes %}
         {% for message in messages %}
@@ -12,6 +12,13 @@
             </div>
         {% endfor %}
     {% endfor %}
+
+    <div class="fight-buttons">
+        <a href="{{ path('app_fights_new') }}" class="btn btn-primary">Nuevo Combate vs CPU</a>
+        <a href="{{ path('app_fights_pvp_new') }}" class="btn btn-danger">Luchar contra Entrenador</a>
+    </div>
+
+    <h2>Historial de Combates</h2>
 
     <table class="table">
         <thead>
@@ -46,6 +53,31 @@
         </tbody>
     </table>
 
-    <a href="{{ path('app_fights_new') }}" class="btn btn-primary">Nuevo Combate</a>
     <a href="{{ path('app_main') }}" class="btn btn-secondary">Volver al inicio</a>
+
+    <style>
+        .fight-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: black;
+        }
+        .badge {
+            background-color: red;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+    </style>
 {% endblock %}
