@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Opciones de Victoria{% endblock %}
+
+{% block body %}
+    <h1>¡Has ganado el combate!</h1>
+    <p>Elige una de las siguientes opciones:</p>
+
+    <form method="post">
+        <button type="submit" name="action" value="levelup" class="btn btn-success">
+            Subir de nivel al Pokémon ganador {{ winner_pokemon.pokeplantilla.name }}
+        </button>
+
+        <button type="submit" name="action" value="capture" class="btn btn-primary">
+            Intentar capturar a {{ enemy_pokemon.pokeplantilla.name }}
+        </button>
+
+        {% if injured_pokemons is not empty %}
+            <label for="revive_pokemon">Selecciona un Pokémon a revivir:</label>
+            <select name="revive_pokemon_id" id="revive_pokemon">
+                {% for pokemon in injured_pokemons %}
+                    <option value="{{ pokemon.id }}">{{ pokemon.pokeplantilla.name }} (Nivel {{ pokemon.level }})</option>
+                {% endfor %}
+            </select>
+            <button type="submit" name="action" value="revive" class="btn btn-warning">
+                Resucitar Pokémon
+            </button>
+        {% else %}
+            <p>No tienes Pokémon malheridos para revivir.</p>
+        {% endif %}
+    </form>
+{% endblock %}

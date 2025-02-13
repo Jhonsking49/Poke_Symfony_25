@@ -65,6 +65,31 @@ class PokemonsRepository extends ServiceEntityRepository
         ];
     }
 
+    public function pokedeadalive(Pokemons $pokemon): void
+    {
+        $newState = $pokemon->getState() === 0 ? 1 : 0;
+        $pokemon->setState($newState);
+
+        $this->_em->persist($pokemon);
+        $this->_em->flush();
+    }
+
+    // En el archivo PokemonsRepository.php
+
+    public function findInjured(int $userId, Pokemons $pokemon): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.user = :userId')  // Filtra por el user_id
+            ->andWhere('p.state = 1')    // Filtra por Pokémon malheridos (state = 1)
+            ->andWhere('p.id != :pokemonId') // Asegura que no sea el mismo Pokémon que se pasa como parámetro
+            ->setParameter('userId', $userId)
+            //->setParameter('pokemonId', $pokemon->getId()) // Excluye el Pokémon específico del query
+            ->getQuery()
+            ->getResult();
+    }
+
+
+
     //    /**
     //     * @return Pokemons[] Returns an array of Pokemons objects
     //     */

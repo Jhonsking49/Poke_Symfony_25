@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Pokemons;
+use App\Repository\PokemonsRepository;
 
 #[Route('/fights')]
 final class FightsController extends AbstractController
@@ -45,7 +46,7 @@ final class FightsController extends AbstractController
     }
 
     #[Route('/new', name: 'app_fights_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, PokemonsRepository $pokemonsRepository): Response
     {
         $user = $this->getUser();
         if (!$user) {
@@ -119,13 +120,19 @@ final class FightsController extends AbstractController
             if ($resultado === 1) {
                 $selectedPokemon->setLevel($selectedPokemon->getLevel() + 1);
                 $this->addFlash('success', sprintf(
-                    '¡Tu %s ha ganado el combate contra %s y ha subido al nivel %d!',
+                    '¡Tu %s ha ganado el combate contra %s!',
                     $selectedPokemon->getPokeplantilla()->getName(),
-                    $randomPokemon->getPokeplantilla()->getName(),
-                    $selectedPokemon->getLevel()
+                    $randomPokemon->getPokeplantilla()->getName()
                 ));
+            
+                $entityManager->persist($selectedPokemon);
+                $entityManager->flush();
+                return $this->redirectToRoute('app_fights_winneroptions', [
+                    'winner_pokemon_id' => $selectedPokemon->getId(),
+                    'enemy_pokemon_id' => $randomPokemon->getId(),
+                ]);
             } elseif ($resultado === 2) {
-                $randomPokemon->setLevel($randomPokemon->getLevel() + 1);
+                $pokemonsRepository->pokedeadalive($selectedPokemon);
                 $this->addFlash('error', sprintf(
                     '¡Tu %s ha perdido el combate contra %s!',
                     $selectedPokemon->getPokeplantilla()->getName(),
@@ -149,7 +156,9 @@ final class FightsController extends AbstractController
             $entityManager->flush();
 
             // Limpiar la sesión después del combate
-            $session->remove('pokenemy_id');
+            if($resultado != 1) {
+                $session->remove('pokenemy_id');
+            }
 
             return $this->redirectToRoute('app_main');
         }
@@ -160,6 +169,97 @@ final class FightsController extends AbstractController
         ]);
     }
 
+    #[Route('/winneroptions', name: 'app_fights_winneroptions', methods: ['GET', 'POST'])]
+    public function winneroptions(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('Debes estar logueado para acceder a esta opción.');
+        }
+
+        // Obtener el Pokémon ganador de la última batalla (podrías almacenarlo en sesión o como parámetro)
+        $selectedPokemonId = $request->query->get('winner_pokemon_id');
+        $selectedPokemon = $entityManager->getRepository(Pokemons::class)->find($selectedPokemonId);
+
+        if (!$selectedPokemon || $selectedPokemon->getUser() !== $user) {
+            throw $this->createAccessDeniedException('Pokémon inválido.');
+        }
+
+        // Obtener Pokémon malheridos del usuario (state = 1)
+        $injuredPokemons = $entityManager->getRepository(Pokemons::class)->findInjured($user->getId(), $selectedPokemon);
+
+        // Lanzar excepción si no hay Pokémon malheridos
+        if (empty($injuredPokemons)) {
+            $injuredPokemons = array();
+            //throw $this->createNotFoundException('No hay Pokémon malheridos para revivir.');
+        }
+
+        // Obtener el Pokémon enemigo vencido
+        $enemyPokemonId = $request->query->get('enemy_pokemon_id');
+        $enemyPokemon = $entityManager->getRepository(Pokemons::class)->findBy(['id' => $enemyPokemonId]);
+
+        if (!$enemyPokemon) {
+            throw $this->createNotFoundException('Pokémon enemigo no encontrado.');
+        }
+
+        if ($request->isMethod('POST')) {
+            $action = $request->request->get('action');
+
+            if ($action === 'levelup') {
+                // Opción 1: Subir de nivel al Pokémon ganador
+                $selectedPokemon->setLevel($selectedPokemon->getLevel() + 1);
+                $this->addFlash('success', sprintf(
+                    '¡Tu %s ha subido al nivel %d!',
+                    $selectedPokemon->getPokeplantilla()->getName(),
+                    $selectedPokemon->getLevel()
+                ));
+
+            } elseif ($action === 'capture') {
+                // Opción 2: Intentar capturar al Pokémon vencido (60% de probabilidad)
+                $chance = rand(1, 100);
+                if ($chance <= 60) {
+                    $enemyPokemon->setUser($user);
+                    $this->addFlash('success', sprintf(
+                        '¡Has capturado a %s!',
+                        $enemyPokemon->getPokeplantilla()->getName()
+                    ));
+                } else {
+                    $this->addFlash('error', sprintf(
+                        'No has podido capturar a %s.',
+                        $enemyPokemon->getPokeplantilla()->getName()
+                    ));
+                }
+
+            } elseif ($action === 'revive') {
+                // Opción 3: Revivir un Pokémon malherido
+                $revivePokemonId = $request->request->get('revive_pokemon_id');
+                $revivePokemon = $entityManager->getRepository(Pokemons::class)->find($revivePokemonId);
+
+                if ($revivePokemon && $revivePokemon->getUser() === $user && $revivePokemon->getState() === 1) {
+                    $revivePokemon->setState(0);
+                    $this->addFlash('success', sprintf(
+                        '¡Tu Pokémon %s ha sido revivido!',
+                        $revivePokemon->getPokeplantilla()->getName()
+                    ));
+                } else {
+                    $this->addFlash('error', 'No puedes revivir este Pokémon.');
+                }
+            }
+
+            // Guardar los cambios
+            $entityManager->persist($selectedPokemon);
+            $entityManager->persist($enemyPokemon);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_main');
+        }
+
+        return $this->render('fights/winneroptions.html.twig', [
+            'injured_pokemons' => $injuredPokemons,
+            'selected_pokemon' => $selectedPokemon,
+            'enemy_pokemon' => $enemyPokemon,
+        ]);
+    }
 
     #[Route('/{id}', name: 'app_fights_show', methods: ['GET'])]
     public function show(Fights $fight): Response
