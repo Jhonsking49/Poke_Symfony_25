@@ -3,23 +3,147 @@
 {% block title %}Desafíos Pendientes{% endblock %}
 
 {% block body %}
-    <h1>Desafíos Pendientes</h1>
+    <h1 class="title">Desafíos Pendientes</h1>
 
     {% if pending_challenges|length > 0 %}
         <div class="challenges-list">
             {% for challenge in pending_challenges %}
                 <div class="challenge-card">
-                    <h3>Desafío de {{ challenge.challenger.username }}</h3>
-                    <p>Pokémon desafiante: {{ challenge.challengerPokemon.pokeplantilla.name }}</p>
-                    <p>Nivel: {{ challenge.challengerPokemon.level }} | Fuerza: {{ challenge.challengerPokemon.strength }}</p>
+                    <h3 class="challenge-title">Desafío de {{ challenge.challenger.username }}</h3>
+                    <p class="pokemon-info">
+                        <strong>Pokémon desafiante:</strong> {{ challenge.challengerPokemon.pokeplantilla.name }}
+                    </p>
+                    <p class="stats">
+                        Nivel: <span class="badge level">{{ challenge.challengerPokemon.level }}</span>
+                        | Fuerza: <span class="badge strength">{{ challenge.challengerPokemon.strength }}</span>
+                    </p>
                     <a href="{{ path('app_fights_accept_challenge', {'id': challenge.id}) }}" 
                        class="btn btn-success">Aceptar Desafío</a>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <p>No tienes desafíos pendientes.</p>
+        <p class="no-challenges">No tienes desafíos pendientes.</p>
     {% endif %}
 
     <a href="{{ path('app_main') }}" class="btn btn-secondary">Volver</a>
+
+    <style>
+        /* Fuente global y colores generales */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Títulos */
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff4500;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Contenedor de desafíos */
+        .challenges-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Tarjeta de desafío */
+        .challenge-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 60%;
+            text-align: left;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .challenge-card:hover {
+            transform: scale(1.02);
+        }
+
+        .challenge-title {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .pokemon-info {
+            font-size: 1.1rem;
+            color: #555;
+            margin: 5px 0;
+        }
+
+        .stats {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Etiquetas de nivel y fuerza */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 12px;
+            margin-left: 5px;
+        }
+
+        .level {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .strength {
+            background-color: #ffcc00;
+            color: black;
+        }
+
+        /* Botones estilizados */
+        .btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            margin-top: 2rem;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Mensaje de no desafíos */
+        .no-challenges {
+            font-size: 1.2rem;
+            color: #777;
+            margin-top: 1.5rem;
+        }
+    </style>
 {% endblock %}

@@ -3,7 +3,7 @@
 {% block title %}Combates Pokémon{% endblock %}
 
 {% block body %}
-    <h1>Combates Pokémon</h1>
+    <h1 class="title">Combates Pokémon</h1>
 
     {% for label, messages in app.flashes %}
         {% for message in messages %}
@@ -14,11 +14,11 @@
     {% endfor %}
 
     <div class="fight-buttons">
-        <a href="{{ path('app_fights_new') }}" class="btn btn-primary">Nuevo Combate vs CPU</a>
-        <a href="{{ path('app_fights_pvp_new') }}" class="btn btn-danger">Luchar contra Entrenador</a>
+        <a href="{{ path('app_fights_new') }}" class="btn btn-primary">🕹️ Nuevo Combate vs CPU</a>
+        <a href="{{ path('app_fights_pvp_new') }}" class="btn btn-danger">🎮 Luchar contra Entrenador</a>
     </div>
 
-    <h2>Historial de Combates</h2>
+    <h2 class="subtitle">Historial de Combates</h2>
 
     <table class="table">
         <thead>
@@ -31,23 +31,27 @@
         </thead>
         <tbody>
         {% for fight in fights %}
-            <tr>
-                <td>{{ fight.id }}</td>
-                <td>{{ fight.pokeuser.pokeplantilla.name }} (Nivel: {{ fight.pokeuser.level }})</td>
-                <td>{{ fight.pokenemy.pokeplantilla.name }} (Nivel: {{ fight.pokenemy.level }})</td>
-                <td>
-                    {% if fight.result == 1 %}
-                        Victoria
-                    {% elseif fight.result == 2 %}
-                        Derrota
-                    {% else %}
-                        Empate
-                    {% endif %}
-                </td>
-            </tr>
+            {% if fight.pokeuser.user.id == app.user.id %}
+                <tr>
+                    <td>{{ fight.id }}</td>
+                    <td>{{ fight.pokeuser.pokeplantilla.name }} <span class="level-badge">Nivel: {{ fight.pokeuser.level }}</span></td>
+                    <td>{{ fight.pokenemy.pokeplantilla.name }} <span class="level-badge">Nivel: {{ fight.pokenemy.level }}</span></td>
+                    <td>
+                        <span class="result result-{{ fight.result }}">
+                            {% if fight.result == 1 %}
+                                Victoria
+                            {% elseif fight.result == 2 %}
+                                Derrota
+                            {% else %}
+                                Empate
+                            {% endif %}
+                        </span>
+                    </td>
+                </tr>
+            {% endif %}
         {% else %}
             <tr>
-                <td colspan="4">No hay registros de combates</td>
+                <td colspan="4" class="no-records">No hay registros de combates</td>
             </tr>
         {% endfor %}
         </tbody>
@@ -56,28 +60,175 @@
     <a href="{{ path('app_main') }}" class="btn btn-secondary">Volver al inicio</a>
 
     <style>
+        /* Fuente global */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Títulos */
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff4500;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #555;
+            margin-top: 2rem;
+        }
+
+        /* Botones de combate */
         .fight-buttons {
             display: flex;
-            gap: 1rem;
+            justify-content: center;
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
+
+        .btn {
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
         .btn-danger {
             background-color: #dc3545;
             color: white;
         }
+
         .btn-danger:hover {
             background-color: #c82333;
         }
-        .btn-warning {
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            margin-top: 2rem;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Estilo de tabla */
+        .table {
+            width: 80%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background-color: #ff4500;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .no-records {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #777;
+            padding: 20px;
+        }
+
+        /* Etiquetas de nivel */
+        .level-badge {
+            display: inline-block;
+            background-color: #ffcc00;
+            color: black;
+            font-size: 0.9rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        /* Resultado del combate */
+        .result {
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .result-1 {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .result-2 {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .result-0 {
             background-color: #ffc107;
             color: black;
         }
-        .badge {
-            background-color: red;
+
+        /* Mensajes de alerta */
+        .alert {
+            padding: 10px;
+            margin: 10px auto;
+            width: 60%;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .alert-success {
+            background-color: #28a745;
             color: white;
-            padding: 2px 6px;
-            border-radius: 50%;
-            margin-left: 5px;
+        }
+
+        .alert-error {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .alert-warning {
+            background-color: #ffc107;
+            color: black;
         }
     </style>
 {% endblock %}

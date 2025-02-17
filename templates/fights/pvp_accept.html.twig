@@ -3,17 +3,17 @@
 {% block title %}Aceptar Desafío{% endblock %}
 
 {% block body %}
-    <h1>¡Te han desafiado!</h1>
+    <h1 class="title">¡Te han desafiado!</h1>
 
     <div class="challenge-info">
-        <p>Entrenador desafiante: {{ challenge.challenger.username }}</p>
-        <p>Pokémon desafiante: {{ challenge.challengerPokemon.pokeplantilla.name }}</p>
+        <p><strong>Entrenador desafiante:</strong> {{ challenge.challenger.username }}</p>
+        <p><strong>Pokémon desafiante:</strong> {{ challenge.challengerPokemon.pokeplantilla.name }}</p>
     </div>
 
     <form method="post" class="pvp-form">
         <div class="form-group">
-            <label>Elige tu Pokémon para el combate:</label>
-            <select name="defender_pokemon_id" required>
+            <label for="defender_pokemon_id">Elige tu Pokémon para el combate:</label>
+            <select name="defender_pokemon_id" id="defender_pokemon_id" required>
                 {% for pokemon in user_pokemons %}
                     <option value="{{ pokemon.id }}">
                         {{ pokemon.pokeplantilla.name }} 
@@ -27,4 +27,112 @@
     </form>
 
     <a href="{{ path('app_fights_index') }}" class="btn btn-secondary">Rechazar</a>
+
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Título */
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff4500;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Información del desafío */
+        .challenge-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 50%;
+            margin: 0 auto 2rem;
+            text-align: left;
+            font-size: 1.1rem;
+        }
+
+        /* Formulario */
+        .pvp-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 50%;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        /* Botones */
+        .btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            display: block;
+            width: 50%;
+            margin: 2rem auto 0;
+            text-align: center;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Responsividad */
+        @media (max-width: 768px) {
+            .challenge-info,
+            .pvp-form {
+                width: 90%;
+            }
+
+            .btn-secondary {
+                width: 90%;
+            }
+        }
+    </style>
 {% endblock %}

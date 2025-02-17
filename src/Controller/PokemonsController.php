@@ -69,7 +69,7 @@ final class PokemonsController extends AbstractController
         PokeplantillaRepository $pokeplantillaRepository
     ): Response
     {
-        try {
+
             // Generar un ID aleatorio entre 1 y 151
             $randomPokemonId = random_int(1, 151);
             $pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon/{$randomPokemonId}";
@@ -122,10 +122,7 @@ final class PokemonsController extends AbstractController
                 'random_id' => $randomPokemonId // Pasamos el ID aleatorio a la vista
             ]);
 
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Ha ocurrido un error al obtener el Pokémon.');
-            return $this->redirectToRoute('app_main');
-        }
+
     }
 
     #[Route('/mis-pokemons', name: 'app_pokemons_mis_pokemons', methods: ['GET'])]

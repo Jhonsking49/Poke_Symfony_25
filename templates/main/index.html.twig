@@ -229,36 +229,69 @@
             margin: 0 20px 0 0;
             color: #666;
         }
+
+        .pokemon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .pokemon-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .pokemon-card:hover {
+            transform: translateY(-5px);
+        }
+        .pokemon-card.inactive {
+            background-color: #ffcccc !important;
+        }
+        .pokemon-image {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        .pokemon-info h3 {
+            margin: 5px 0;
+            color: #333;
+            text-transform: capitalize;
+        }
     </style>
 
-    <div class="pokemon-grid">
-        {% for pokemon in pokemons %}
-            <div class="pokemon-card">
-                <img src="{{ pokemon.pokeplantilla.img }}" alt="{{ pokemon.pokeplantilla.name }}" class="pokemon-image">
-                <div class="pokemon-info">
-                    <h3>{{ pokemon.pokeplantilla.name }}</h3>
-                    <div class="pokemon-stats">
-                        <span class="stat">Nivel: {{ pokemon.level }}</span>
-                        <span class="stat">Fuerza: {{ pokemon.strength }}</span>
-                    </div>
-                    <div class="card-buttons">
-                        <a href="{{ path('app_pokemon_train', {'id': pokemon.id}) }}" 
-                           class="btn btn-train" 
-                           {% if pokemon.state == 0 %}disabled{% endif %}>
-                            Entrenar
-                        </a>
-                        {% if pokemon.pokeplantilla.evolution and pokemon.level >= pokemon.pokeplantilla.evolevel %}
-                            <a href="{{ path('app_pokemon_evolve', {'id': pokemon.id}) }}" 
-                               class="btn btn-evolve">
-                                Evolucionar (Nivel {{ pokemon.pokeplantilla.evolevel }})
+    <div class="example-wrapper">
+        <div class="pokemon-grid">
+            {% for pokemon in pokemons %}
+                <div class="pokemon-card {% if pokemon.state == 0 %}inactive{% endif %}">
+                    <img src="{{ pokemon.pokeplantilla.img }}" alt="{{ pokemon.pokeplantilla.name }}" class="pokemon-image">
+                    <div class="pokemon-info">
+                        <h3>{{ pokemon.pokeplantilla.name }}</h3>
+                        <div class="pokemon-stats">
+                            <span class="stat">Nivel: {{ pokemon.level }}</span>
+                            <span class="stat">Fuerza: {{ pokemon.strength }}</span>
+                        </div>
+                        <div class="card-buttons">
+                            <a href="{{ path('app_pokemon_train', {'id': pokemon.id}) }}" 
+                               class="btn btn-train" 
+                               {% if pokemon.state == 0 %}disabled{% endif %}>
+                                Entrenar
                             </a>
-                        {% endif %}
+                            {% if pokemon.pokeplantilla.evolution and pokemon.level >= pokemon.pokeplantilla.evolevel %}
+                                <a href="{{ path('app_pokemon_evolve', {'id': pokemon.id}) }}" 
+                                   class="btn btn-evolve">
+                                    Evolucionar (Nivel {{ pokemon.pokeplantilla.evolevel }})
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% else %}
-            <p>No hay pokémons disponibles.</p>
-        {% endfor %}
+            {% else %}
+                <p>No hay pokémons disponibles.</p>
+            {% endfor %}
+        </div>
     </div>
-</div>
 {% endblock %}
