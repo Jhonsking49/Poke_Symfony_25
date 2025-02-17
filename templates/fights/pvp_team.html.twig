@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nuevo Combate PvP por Equipo{% endblock %}
+
+{% block body %}
+<style>
+    body {
+        background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+    .pvp-form {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #333;
+    }
+    .pokemon-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .pokemon-item {
+        background: #f9f9f9;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .pokemon-item:hover {
+        background: #e3f2fd;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: 2px solid #0056b3;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: 2px solid #5a6268;
+        display: inline-block;
+        text-align: center;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    .error-message {
+        color: red;
+        font-size: 14px;
+        display: none;
+        margin-top: 5px;
+    }
+</style>
+
+<h1 style="text-align: center;">Desafiar a otro Entrenador por Equipo</h1>
+
+<form method="post" class="pvp-form" onsubmit="return validarSeleccion()">
+    <div class="form-group">
+        <label>Elige tus Pokémon para el equipo (mínimo 2):</label>
+        <div class="pokemon-list">
+            {% for pokemon in user_pokemons %}
+                <label class="pokemon-item">
+                    <input type="checkbox" name="challenger_team[]" value="{{ pokemon.id }}">
+                    {{ pokemon.pokeplantilla.name }} (Nivel: {{ pokemon.level }}, Fuerza: {{ pokemon.strength }})
+                </label>
+            {% endfor %}
+        </div>
+        <small>Selecciona al menos dos Pokémon para tu equipo.</small>
+        <p class="error-message" id="error-message">Debes seleccionar al menos 2 Pokémon.</p>
+    </div>
+
+    <div class="form-group">
+        <label>Elige el entrenador rival:</label>
+        <select name="target_trainer_id" required>
+            {% for trainer in other_trainers %}
+                <option value="{{ trainer.id }}">
+                    {{ trainer.username }} 
+                    (Pokémon activos: {{ trainer.pokemons|filter(p => p.state == 1)|length }})
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="text-align: center;">
+        <button type="submit" class="btn btn-primary">¡Desafiar!</button>
+        <a href="{{ path('app_fights_index') }}" class="btn btn-secondary">Volver</a>
+    </div>
+</form>
+
+<script>
+    function validarSeleccion() {
+        const checkboxes = document.querySelectorAll('input[name="challenger_team[]"]:checked');
+        const errorMessage = document.getElementById('error-message');
+        
+        if (checkboxes.length < 2) {
+            errorMessage.style.display = 'block';
+            return false;
+        } else {
+            errorMessage.style.display = 'none';
+            return true;
+        }
+    }
+</script>
+
+{% endblock %}

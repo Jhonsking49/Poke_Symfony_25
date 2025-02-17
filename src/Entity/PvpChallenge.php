@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PvpChallengeRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PvpChallengeRepository::class)]
@@ -31,9 +33,26 @@ class PvpChallenge
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\Column]
+    private ?int $type = null;
+
+    /**
+     * @var Collection<int, Pokemons>
+     */
+    #[ORM\ManyToMany(targetEntity: Pokemons::class, inversedBy: 'pvpChallengerTeam')]
+    private Collection $challengerTeam;
+
+    /**
+     * @var Collection<int, Pokemons>
+     */
+    #[ORM\ManyToMany(targetEntity: Pokemons::class, inversedBy: 'pvpEnemyTeam')]
+    private Collection $enemyTeam;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->challengerTeam = new ArrayCollection();
+        $this->enemyTeam = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -88,5 +107,65 @@ class PvpChallenge
     public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getType(): ?int
+    {
+        return $this->type;
+    }
+
+    public function setType(int $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Pokemons>
+     */
+    public function getChallengerTeam(): Collection
+    {
+        return $this->challengerTeam;
+    }
+
+    public function addChallengerTeam(Pokemons $challengerTeam): static
+    {
+        if (!$this->challengerTeam->contains($challengerTeam)) {
+            $this->challengerTeam->add($challengerTeam);
+        }
+
+        return $this;
+    }
+
+    public function removeChallengerTeam(Pokemons $challengerTeam): static
+    {
+        $this->challengerTeam->removeElement($challengerTeam);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Pokemons>
+     */
+    public function getEnemyTeam(): Collection
+    {
+        return $this->enemyTeam;
+    }
+
+    public function addEnemyTeam(Pokemons $enemyTeam): static
+    {
+        if (!$this->enemyTeam->contains($enemyTeam)) {
+            $this->enemyTeam->add($enemyTeam);
+        }
+
+        return $this;
+    }
+
+    public function removeEnemyTeam(Pokemons $enemyTeam): static
+    {
+        $this->enemyTeam->removeElement($enemyTeam);
+
+        return $this;
     }
 }

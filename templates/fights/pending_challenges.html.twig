@@ -5,9 +5,13 @@
 {% block body %}
     <h1 class="title">Desafíos Pendientes</h1>
 
-    {% if pending_challenges|length > 0 %}
+    {% set solo_pokemon_challenges = pending_challenges|filter(challenge => challenge.type == 1) %}
+    {% set team_challenges = pending_challenges|filter(challenge => challenge.type == 2) %}
+
+    {% if solo_pokemon_challenges|length > 0 %}
+        <h2 class="subtitle">Desafíos de un Solo Pokémon</h2>
         <div class="challenges-list">
-            {% for challenge in pending_challenges %}
+            {% for challenge in solo_pokemon_challenges %}
                 <div class="challenge-card">
                     <h3 class="challenge-title">Desafío de {{ challenge.challenger.username }}</h3>
                     <p class="pokemon-info">
@@ -22,13 +26,42 @@
                 </div>
             {% endfor %}
         </div>
-    {% else %}
+    {% endif %}
+
+    {% if team_challenges|length > 0 %}
+        <h2 class="subtitle">Batallas por Equipos</h2>
+        <div class="challenges-list">
+            {% for challenge in team_challenges %}
+                <div class="challenge-card">
+                    <h3 class="challenge-title">Desafío de {{ challenge.challenger.username }}</h3>
+                    <p class="pokemon-info"><strong>Equipo desafiante:</strong></p>
+                    <ul>
+                        {% for pokemon in challenge.challengerTeam %}
+                            <li>{{ pokemon.pokeplantilla.name }} (Nivel: {{ pokemon.level }}, Fuerza: {{ pokemon.strength }})</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{{ path('app_fights_accept_challenge', {'id': challenge.id}) }}" 
+                       class="btn btn-success">Aceptar Desafío</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if solo_pokemon_challenges|length == 0 and team_challenges|length == 0 %}
         <p class="no-challenges">No tienes desafíos pendientes.</p>
     {% endif %}
 
     <a href="{{ path('app_main') }}" class="btn btn-secondary">Volver</a>
 
     <style>
+        .subtitle {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-top: 1.5rem;
+        }
+        /* Manteniendo los estilos previos */
+
         /* Fuente global y colores generales */
         body {
             font-family: 'Arial', sans-serif;

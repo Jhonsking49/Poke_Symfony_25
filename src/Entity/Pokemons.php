@@ -42,10 +42,24 @@ class Pokemons
     #[ORM\Column]
     private ?int $state = null;
 
+    /**
+     * @var Collection<int, PvpChallenge>
+     */
+    #[ORM\ManyToMany(targetEntity: PvpChallenge::class, mappedBy: 'challengerTeam')]
+    private Collection $pvpChallengerTeam;
+
+    /**
+     * @var Collection<int, PvpChallenge>
+     */
+    #[ORM\ManyToMany(targetEntity: PvpChallenge::class, mappedBy: 'enemyTeam')]
+    private Collection $pvpEnemyTeam;
+
     public function __construct()
     {
         $this->fightspokeuser = new ArrayCollection();
         $this->fightspokenemy = new ArrayCollection();
+        $this->pvpChallengerTeam = new ArrayCollection();
+        $this->pvpEnemyTeam = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -169,6 +183,60 @@ class Pokemons
     public function setState(int $state): static
     {
         $this->state = $state;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PvpChallenge>
+     */
+    public function getPvpChallengerTeam(): Collection
+    {
+        return $this->pvpChallengerTeam;
+    }
+
+    public function addPvpChallengerTeam(PvpChallenge $pvpChallengerTeam): static
+    {
+        if (!$this->pvpChallengerTeam->contains($pvpChallengerTeam)) {
+            $this->pvpChallengerTeam->add($pvpChallengerTeam);
+            $pvpChallengerTeam->addChallengerTeam($this);
+        }
+
+        return $this;
+    }
+
+    public function removePvpChallengerTeam(PvpChallenge $pvpChallengerTeam): static
+    {
+        if ($this->pvpChallengerTeam->removeElement($pvpChallengerTeam)) {
+            $pvpChallengerTeam->removeChallengerTeam($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PvpChallenge>
+     */
+    public function getPvpEnemyTeam(): Collection
+    {
+        return $this->pvpEnemyTeam;
+    }
+
+    public function addPvpEnemyTeam(PvpChallenge $pvpEnemyTeam): static
+    {
+        if (!$this->pvpEnemyTeam->contains($pvpEnemyTeam)) {
+            $this->pvpEnemyTeam->add($pvpEnemyTeam);
+            $pvpEnemyTeam->addEnemyTeam($this);
+        }
+
+        return $this;
+    }
+
+    public function removePvpEnemyTeam(PvpChallenge $pvpEnemyTeam): static
+    {
+        if ($this->pvpEnemyTeam->removeElement($pvpEnemyTeam)) {
+            $pvpEnemyTeam->removeEnemyTeam($this);
+        }
 
         return $this;
     }

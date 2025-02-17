@@ -319,6 +319,7 @@ public function new(Request $request, EntityManagerInterface $entityManager): Re
             $challenge->setTargetTrainer($targetTrainer);
             $challenge->setChallengerPokemon($pokemon);
             $challenge->setStatus('pending');
+            $challenge->settype(1);
             
             $entityManager->persist($challenge);
             $entityManager->flush();
@@ -343,6 +344,56 @@ public function new(Request $request, EntityManagerInterface $entityManager): Re
             'other_trainers' => $otherTrainers
         ]);
     }
+
+    #[Route('/fights/pvp/team', name: 'app_fights_pvp_team', methods: ['GET', 'POST'])]
+    public function newPvpTeamFight(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('Debes estar logueado para luchar.');
+        }
+
+        if ($request->isMethod('POST')) {
+            // Obtener los datos correctamente como arrays
+            $challengerTeamIds = $request->request->all('challenger_team');  // Devuelve un array
+            $targetTrainerId = $request->request->getInt('target_trainer_id'); // Devuelve un entero seguro
+        
+            // Verificar que los datos no sean nulos o vacíos
+            if (empty($challengerTeamIds) || count($challengerTeamIds) < 2 || !$targetTrainerId) {
+                $this->addFlash('error', 'Debes seleccionar al menos 2 Pokémon y un entrenador válido.');
+                return $this->redirectToRoute('app_fights_pvp_team');
+            }
+        
+            $targetTrainer = $entityManager->getRepository(User::class)->find($targetTrainerId);
+            $challengerTeam = $entityManager->getRepository(Pokemons::class)->findBy(['id' => $challengerTeamIds]);
+        
+            if (!$challengerTeam || !$targetTrainer) {
+                $this->addFlash('error', 'Error al procesar el desafío. Verifica los datos ingresados.');
+                return $this->redirectToRoute('app_fights_pvp_team');
+            }
+        
+            // Crear el desafío
+            $challenge = new PvpChallenge();
+            $challenge->setChallenger($user);
+            $challenge->setTargetTrainer($targetTrainer);
+        
+            // Relacionar correctamente los Pokémon con el desafío
+            foreach ($challengerTeam as $pokemon) {
+                $challenge->addChallengerTeam($pokemon);
+            }
+        
+            $challenge->setStatus('pending');
+            $challenge->setType(2);
+        
+            $entityManager->persist($challenge);
+            $entityManager->flush();
+        
+            $this->addFlash('success', '¡Desafío enviado a ' . $targetTrainer->getUsername() . '!');
+            return $this->redirectToRoute('app_main');
+        }
+        
+    }
+
 
     #[Route('/fights/accept-challenge/{id}', name: 'app_fights_accept_challenge', methods: ['GET', 'POST'])]
     public function acceptChallenge(int $id, Request $request, EntityManagerInterface $entityManager): Response
